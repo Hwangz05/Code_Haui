@@ -1,0 +1,29 @@
+.loginPage {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;
+  background-image: url('/haui-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 2rem;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(1px);
+  pointer-events: none;
+}
+
+.formContainer {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 460px;
+  margin-left: clamp(1rem, 6vw, 6rem);
+}

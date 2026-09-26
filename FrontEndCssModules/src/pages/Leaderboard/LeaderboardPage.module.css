@@ -1,0 +1,469 @@
+.headerSection {
+    padding: 2.5rem 0 1.5rem;
+    text-align: center;
+}
+
+.pageTitle {
+    font-size: 2.25rem;
+    font-weight: 900;
+    color: #fff;
+    margin-top: 0.75rem;
+    letter-spacing: -0.02em;
+}
+
+.pageSubtitle {
+    color: var(--text-muted);
+    font-size: 1.125rem;
+    max-width: 650px;
+    margin: 0.5rem auto 0;
+    line-height: 1.5;
+}
+
+.filterBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.timeframeTabs {
+    display: flex;
+    background-color: var(--bg-surface);
+    padding: 0.35rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+    gap: 0.25rem;
+}
+
+.tabBtn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.tabBtn:hover {
+    color: #fff;
+}
+
+.tabBtnActive {
+    background-color: var(--color-primary);
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.35);
+}
+
+.searchAndSelect {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.filterInput {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 0.5rem 0.85rem;
+    color: #fff;
+    font-size: 0.85rem;
+    min-width: 220px;
+}
+
+.filterInput:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.filterSelect {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 0.5rem 0.85rem;
+    color: #fff;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.filterSelect:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+/* Podium Top 3 */
+.podiumGrid {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr 1fr;
+    gap: 1.5rem;
+    margin: 2rem 0 3rem;
+    align-items: end;
+}
+
+@media (max-width: 768px) {
+    .podiumGrid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+.podiumCard {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: 2rem 1.5rem 1.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    transition: transform var(--transition-normal);
+}
+
+.podiumCard:hover {
+    transform: translateY(-4px);
+}
+
+.rankTwo {
+    border: 1.5px solid rgba(203, 213, 225, 0.3);
+    border-color: rgba(203, 213, 225, 0.3);
+    background: linear-gradient(180deg, rgba(203, 213, 225, 0.05), var(--bg-card));
+    box-shadow: 0 8px 20px rgba(203, 213, 225, 0.1);
+}
+
+.rankThree {
+    border: 1.5px solid rgba(205, 127, 50, 0.3);
+    border-color: rgba(205, 127, 50, 0.3);
+    background: linear-gradient(180deg, rgba(205, 127, 50, 0.05), var(--bg-card));
+    box-shadow: 0 8px 20px rgba(205, 127, 50, 0.1);
+}
+
+.rankOne {
+    background: linear-gradient(180deg, rgba(250, 204, 21, 0.12), var(--bg-card) 60%);
+    border: 2px solid #facc15;
+    box-shadow: 0 12px 40px rgba(250, 204, 21, 0.2);
+    transform: translateY(-0.75rem);
+}
+
+.rankOne:hover {
+    transform: translateY(-1.25rem);
+}
+
+.crownIcon {
+    font-size: 2.75rem;
+    margin-bottom: -0.5rem;
+    filter: drop-shadow(0 4px 10px rgba(250, 204, 21, 0.5));
+    animation: floatCrown 3s ease-in-out infinite;
+}
+
+@keyframes floatCrown {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+.medalBadge {
+    font-size: 2.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.podiumAvatarBox {
+    position: relative;
+    margin: 0.5rem 0 0.75rem;
+}
+
+.podiumAvatar {
+    width: 5rem;
+    height: 5rem;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+}
+
+.firstAvatar {
+    width: 6rem;
+    height: 6rem;
+    border: 4px solid #facc15;
+    box-shadow: 0 0 20px rgba(250, 204, 21, 0.4);
+}
+
+.podiumRankTag {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    background-color: var(--bg-surface);
+    color: #fff;
+    font-weight: 900;
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border-light);
+}
+
+.firstRankTag {
+    background-color: #facc15;
+    color: #000;
+    font-weight: 900;
+    border-color: #facc15;
+}
+
+.podiumName {
+    color: #fff;
+    font-size: 1.1rem;
+    margin-top: 0.4rem;
+}
+
+.firstPlaceName {
+    font-size: 1.35rem;
+    font-weight: 900;
+}
+
+.podiumMeta {
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    margin-top: 0.2rem;
+}
+
+.podiumScore {
+    margin: 0.75rem 0 0.25rem;
+}
+
+.pointsText {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--color-primary);
+    font-family: var(--font-mono);
+}
+
+.firstPointsText {
+    font-size: 1.85rem;
+    color: #facc15;
+}
+
+.ptsUnit {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-left: 0.25rem;
+    font-weight: 600;
+}
+
+.podiumStats {
+    display: flex;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+/* Table Card */
+.tableCard {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.tableHeaderInfo {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.01);
+}
+
+.tableTitle {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 0;
+}
+
+.tableSubtitle {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+}
+
+.tableWrapper {
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    text-align: left;
+}
+
+.table th {
+    background-color: var(--bg-surface);
+    padding: 1rem 1.25rem;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table td {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    vertical-align: middle;
+}
+
+.tableRow {
+    transition: background-color var(--transition-fast);
+}
+
+.tableRow:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.isMeRow {
+    background-color: rgba(249, 115, 22, 0.08) !important;
+    border-left: 3px solid var(--color-primary);
+}
+
+.badgeGold {
+    color: #facc15;
+    font-weight: 900;
+}
+
+.badgeSilver {
+    color: #cbd5e1;
+    font-weight: 800;
+}
+
+.badgeBronze {
+    color: #fb923c;
+    font-weight: 700;
+}
+
+.badgeRegular {
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+.studentCell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.tableAvatar {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    border: 1px solid var(--border-light);
+}
+
+.studentNameWrap {
+    display: flex;
+    align-items: center;
+}
+
+.studentNameText {
+    color: #fff;
+    font-size: 0.9rem;
+}
+
+.studentIdText {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+}
+
+.classText {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.facultyText {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+}
+
+.rateCell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.rateText {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.miniBarTrack {
+    width: 60px;
+    height: 5px;
+    background-color: var(--bg-surface);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.miniBarFill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-success));
+    border-radius: var(--radius-full);
+}
+
+.pointsValue {
+    font-weight: 900;
+    color: var(--color-primary);
+    font-family: var(--font-mono);
+    font-size: 1rem;
+}
+
+.pointsSuffix {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+}
+
+/* My Rank Banner */
+.myRankBanner {
+    margin-top: 2rem;
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(30, 41, 59, 0.9));
+    border: 1px solid rgba(249, 115, 22, 0.3);
+    border-radius: var(--radius-xl);
+    padding: 1.25rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.myRankLeft {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.myRankIcon {
+    font-size: 2.25rem;
+}
+
+.myRankTitle {
+    color: #fff;
+    font-size: 1rem;
+}
+
+.myRankDesc {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-top: 0.2rem;
+}

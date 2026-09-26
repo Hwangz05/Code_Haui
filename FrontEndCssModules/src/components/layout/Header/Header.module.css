@@ -1,0 +1,314 @@
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background-color: var(--bg-header);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 4rem;
+}
+
+.leftGroup {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+/* logo */
+.logoBox {
+    width: 2.5rem;
+    height: 2.5rem;
+    /* background-color: var(--color-haui-gold);
+    border: 2px solid var(--color-haui-red); */
+    border-radius: var(--radius-md);
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.logoImg {
+    width: 45px;
+    height: 45px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+}
+
+.logoInner {
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-haui-red);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-haui-gold);
+    font-weight: 900;
+    font-size: 0.65rem;
+}
+/* brand  */
+.brandInfo {
+    display: flex;
+    flex-direction: column;
+    margin-left: 10px;
+}
+
+.brandTitle {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: var(--color-primary);
+    line-height: 1;
+}
+
+.brandSubtitle {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.nav {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.navLink {
+    padding: 0.5rem 0.9rem;
+    border-radius: var(--radius-md);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: all var(--transition-fast);
+}
+
+.navLink:hover {
+    color: var(--text-white);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.navLinkActive {
+    color: var(--color-haui-blue);
+    background-color: var(--color-blue-light);
+    border: 1px solid var(--color-blue-border);
+}
+
+/* Right Group */
+
+.rightGroup {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.searchBox {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.searchIcon {
+    position: absolute;
+    left: 0.75rem;
+    color: var(--text-dim);
+    pointer-events: none;
+}
+
+.searchInput {
+    width: 13rem;
+    padding: 0.45rem 0.75rem 0.45rem 2.2rem;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-full);
+    color: var(--text-main);
+    font-size: 0.85rem;
+    transition: all var(--transition-fast);
+}
+
+.searchInput:focus {
+    width: 16rem;
+    border-color: var(--color-primary);
+    outline: none;
+}
+/* Bell Button */
+.bell-icon {
+    font-size: 1.4rem;
+}
+
+.bellBtn {
+    position: relative;
+    padding: 0.5rem;
+    border-radius: var(--radius-full);
+    color: var(--text-muted);
+    display: flex;
+    font-size: 1.2rem;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+}
+
+.bellBtn:hover {
+    color: var(--text-white);
+    background-color: var(--border-color);
+}
+
+.notiBadge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 1rem;
+    height: 1rem;
+    background-color: var(--color-primary);
+    color: var(--text-white);
+    font-size: 0.6rem;
+    font-weight: 800;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: pulse 2s infinite;
+}
+
+/* Profile Button */
+.profileBtn {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.35rem 0.75rem 0.35rem 0.35rem;
+    border-radius: var(--radius-full);
+    border: 1px solid transparent;
+    transition: all var(--transition-fast);
+}
+
+.profileBtn:hover {
+    background-color: var(--border-color);
+    border-color: var(--border-light);
+}
+
+.avatarWrapper {
+    position: relative;
+}
+
+.avatar {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    border: 2px solid var(--color-primary);
+}
+
+.onlineDot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 0.65rem;
+    height: 0.65rem;
+    background-color: var(--color-success);
+    border-radius: var(--radius-full);
+    border: 2px solid var(--bg-header);
+}
+
+.profileInfo {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.studentName {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-white);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    line-height: 1.1;
+}
+
+.studentId {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.1;
+    margin-top: 2px;
+}
+
+.icon-profile--item {
+    font-size: 1.1rem;
+}
+
+.dropdown {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    width: 16rem;
+    background-color: #1a2436;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    padding: 0.75rem 0;
+    z-index: 100;
+}
+
+.dropdownHeader {
+    padding: 0.5rem 1rem 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.dropdownItem {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 1rem;
+    color: var(--text-muted);
+    font-size: 1rem;
+    transition: all var(--transition-fast);
+}
+
+.dropdownItem:hover {
+    background-color: var(--border-color);
+    color: var(--text-white);
+}
+
+.logoutBtn {
+    width: 100%;
+    color: var(--color-danger);
+    border-top: 1px solid var(--border-color);
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+}
+
+.logoutBtn:hover {
+    background-color: rgba(244, 63, 94, 0.1);
+    color: #ff6b81;
+}
+
+@keyframes pulse {
+    0%,
+    100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+@media (max-width: 768px) {
+    .nav,
+    .searchBox,
+    .profileInfo {
+        display: none;
+    }
+}

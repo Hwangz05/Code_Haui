@@ -1,0 +1,332 @@
+.headerCard {
+    background: linear-gradient(135deg, #1e293b 0%, #152238 100%);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-2xl);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-md);
+}
+
+.headerFlex {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.avatarWrapper {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.avatar {
+    width: 6.5rem;
+    height: 6.5rem;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    border: 4px solid var(--color-primary);
+    box-shadow: 0 0 25px rgba(249, 115, 22, 0.3);
+}
+
+.onlineBadge {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    width: 1rem;
+    height: 1rem;
+    background-color: var(--color-success);
+    border: 2px solid var(--bg-card);
+    border-radius: var(--radius-full);
+}
+
+.profileMeta {
+    flex: 1;
+    min-width: 260px;
+}
+
+.titleRow {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.4rem;
+}
+
+.userName {
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: #fff;
+    margin: 0;
+}
+
+.userSub {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 0.6rem;
+}
+
+.dot {
+    margin: 0 0.5rem;
+    color: var(--text-dim);
+}
+
+.userBio {
+    font-size: 1rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+    max-width: 600px;
+}
+
+.headerActions {
+    flex-shrink: 0;
+}
+
+/* Stats Cards Grid */
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2.5rem;
+}
+
+.statCard {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: 1.5rem;
+    transition: transform var(--transition-normal);
+}
+
+.color-green {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-success);
+}
+.color-blue {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-haui-blue);
+}
+.color-red {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-haui-red);
+}
+.color-gold {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-haui-gold);
+}
+
+.statCard:hover {
+    transform: translateY(-3px);
+    border-color: rgba(249, 115, 22, 0.4);
+}
+
+.statIcon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-haui-gold);
+}
+
+.statValue {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #fff;
+    font-family: var(--font-mono);
+}
+
+.statLabel {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+    font-weight: 600;
+}
+
+.statSub {
+    font-size: 0.8rem;
+    color: var(--color-primary);
+    margin-top: 0.4rem;
+}
+
+/* 2-Column Content */
+.contentGrid {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 2rem;
+}
+
+@media (max-width: 992px) {
+    .contentGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.leftCol,
+.rightCol {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.sectionCard {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: 1.5rem;
+}
+
+.cardHeaderTitle {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 1.25rem;
+}
+
+/* Skills list */
+.skillsList {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.skillItem {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.skillHeader {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+}
+
+.skillName {
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.skillPercent {
+    color: #fff;
+    font-weight: 700;
+    font-family: var(--font-mono);
+}
+
+.skillTrack {
+    width: 100%;
+    height: 6px;
+    background-color: var(--bg-surface);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.skillBar {
+    height: 100%;
+    border-radius: var(--radius-full);
+}
+
+/* Badges list */
+.badgesList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.badgeItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+}
+
+.badgeIconBox {
+    font-size: 1.75rem;
+    width: 2.75rem;
+    height: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+}
+
+.badgeTitle {
+    color: #fff;
+    font-size: 0.85rem;
+    display: block;
+}
+
+.badgeDesc {
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    margin: 0;
+}
+
+/* Submissions Table */
+.tabNavRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+}
+
+.submissionsTableWrapper {
+    overflow-x: auto;
+}
+
+.subTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    text-align: left;
+}
+
+.subTable th {
+    background-color: var(--bg-surface);
+    padding: 0.75rem 1rem;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.subTable td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.subProblemName {
+    color: #fff;
+    font-size: 0.85rem;
+    display: block;
+}
+
+.subMem {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+}
+
+.bottomLinkBox {
+    margin-top: 1rem;
+    text-align: center;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.seeAllLink {
+    color: var(--color-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: color var(--transition-fast);
+}
+
+.seeAllLink:hover {
+    color: #ea580c;
+    text-decoration: underline;
+}

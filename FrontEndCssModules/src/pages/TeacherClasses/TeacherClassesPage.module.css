@@ -1,0 +1,433 @@
+/* ── Page Layout ── */
+.page {
+    background-color: #f1f5f9;
+    min-height: 100vh;
+    padding: 1.75rem 2rem;
+    color: #1e293b;
+    font-family: inherit;
+}
+
+.container {
+    max-width: 1300px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* ── Page Header ── */
+.pageHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.pageTitle {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0 0 0.25rem 0;
+}
+
+.pageTitleIcon {
+    color: #ea580c;
+}
+
+.pageSubtitle {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.headerStats {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.statPill {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 9999px;
+    color: #0f172a;
+    font-size: 0.85rem;
+    font-weight: 700;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.statPillDanger {
+    border-color: #fecaca;
+    background-color: #fef2f2;
+    color: #dc2626;
+}
+
+/* ── Class Summary Cards ── */
+.classSummaryGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.25rem;
+}
+
+.classSummaryCard {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.classSummaryCard:hover {
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.classSummaryCardActive {
+    border-color: #ea580c;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.15), 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.classSummaryTop {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+.classIcon {
+    width: 2.75rem;
+    height: 2.75rem;
+    background-color: #fff7ed;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ea580c;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+
+.classInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.className {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 0.15rem 0;
+}
+
+.classFullName {
+    font-size: 0.78rem;
+    color: #64748b;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.classChevron {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.classSummaryStats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+
+.classStat {
+    text-align: center;
+    padding: 0.6rem 0.4rem;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #f1f5f9;
+}
+
+.classStatDanger .classStatValue {
+    color: #dc2626 !important;
+}
+
+.classStatValue {
+    display: block;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.classStatLabel {
+    display: block;
+    font-size: 0.68rem;
+    color: #64748b;
+    font-weight: 600;
+    margin-top: 0.15rem;
+}
+
+/* ── Filter Bar ── */
+.filterBar {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.85rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.searchBox {
+    position: relative;
+    flex: 1;
+    min-width: 240px;
+}
+
+.searchIcon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 0.85rem;
+}
+
+.searchInput {
+    width: 100%;
+    padding: 0.55rem 1rem 0.55rem 2.5rem;
+    background-color: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    color: #1e293b;
+    font-size: 0.875rem;
+    outline: none;
+    transition: all 0.15s;
+}
+
+.searchInput:focus {
+    background-color: #ffffff;
+    border-color: #ea580c;
+    box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
+}
+
+.statusFilters {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.statusFilterBtn {
+    padding: 0.45rem 0.85rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+    color: #475569;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.statusFilterBtn:hover {
+    background-color: #e2e8f0;
+    color: #0f172a;
+}
+
+.statusFilterActive {
+    background-color: #ea580c !important;
+    border-color: #ea580c !important;
+    color: #ffffff !important;
+}
+
+/* ── Student Table ── */
+.studentTableWrap {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.tableHeader {
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    background-color: #fafafa;
+}
+
+.tableTitle {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+}
+
+.tableCount {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    background-color: #f1f5f9;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+}
+
+.tableScroll {
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 750px;
+    font-size: 0.875rem;
+    text-align: left;
+}
+
+.table thead tr {
+    background-color: #f8fafc;
+}
+
+.table th {
+    padding: 0.85rem 1.25rem;
+    color: #64748b;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+.tableRow {
+    transition: background-color 0.12s;
+}
+
+.tableRow:hover {
+    background-color: #f8fafc;
+}
+
+.tableRow td {
+    padding: 0.95rem 1.25rem;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+    vertical-align: middle;
+}
+
+.tableRow:last-child td {
+    border-bottom: none;
+}
+
+.rankCell {
+    font-weight: 800;
+    color: #94a3b8;
+    text-align: center;
+    width: 40px;
+}
+
+.studentCell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.studentAvatar {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    background-color: #fff7ed;
+    color: #ea580c;
+    font-weight: 800;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.studentName {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 0.1rem 0;
+}
+
+.studentId {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.scoreCell {
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.numCell {
+    font-weight: 600;
+    color: #334155;
+}
+
+.streakCell {
+    color: #ea580c;
+    font-weight: 700;
+}
+
+.noStreak {
+    color: #94a3b8;
+}
+
+.statusBadge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.65rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.detailBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.85rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: #2563eb;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.12s;
+    white-space: nowrap;
+}
+
+.detailBtn:hover {
+    background-color: #eff6ff;
+    border-color: #93c5fd;
+}
+
+.emptyRow {
+    text-align: center;
+    padding: 3rem 1.5rem !important;
+    color: #94a3b8;
+    font-style: italic;
+}

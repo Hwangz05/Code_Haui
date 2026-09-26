@@ -1,0 +1,433 @@
+/* ── Page Layout ── */
+.page {
+    background-color: #f1f5f9;
+    min-height: 100vh;
+    padding: 1.75rem 2rem;
+    color: #1e293b;
+    font-family: inherit;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* ── Back Button ── */
+.backBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background-color: #ffffff;
+    color: #475569;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    width: fit-content;
+}
+
+.backBtn:hover {
+    color: #0f172a;
+    background-color: #f8fafc;
+    border-color: #94a3b8;
+}
+
+/* ── Profile Banner ── */
+.profileBanner {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.profileLeft {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.avatarLarge {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    background-color: #eff6ff;
+    border: 2px solid #3b82f6;
+    color: #2563eb;
+    font-size: 1.5rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.profileInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.studentName {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+}
+
+.studentMeta {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.studentMeta span {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.statusTag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    width: fit-content;
+    margin-top: 0.25rem;
+}
+
+.emailBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.25rem;
+    background-color: #ea580c;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 2px 6px rgba(234, 88, 12, 0.25);
+    white-space: nowrap;
+}
+
+.emailBtn:hover {
+    background-color: #c2410c;
+    transform: translateY(-1px);
+}
+
+.emailBtnSent {
+    background-color: #16a34a !important;
+}
+
+/* ── KPI Cards ── */
+.kpiGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.1rem;
+}
+
+.kpiCard {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.kpiIcon {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+
+.kpiValue {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+    line-height: 1.1;
+}
+
+.kpiLabel {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 600;
+    margin: 0.2rem 0 0 0;
+}
+
+/* ── Tabs ── */
+.tabBar {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 0;
+}
+
+.tabBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.15s;
+}
+
+.tabBtn:hover {
+    color: #0f172a;
+}
+
+.tabBtnActive {
+    color: #ea580c;
+    border-bottom-color: #ea580c;
+}
+
+/* ── Card ── */
+.card {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.cardHeader {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    background-color: #fafafa;
+}
+
+.cardTitle {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+.cardBadge {
+    font-size: 0.75rem;
+    color: #64748b;
+    background-color: #f1f5f9;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+    font-weight: 600;
+}
+
+/* ── Submissions Table ── */
+.tableScroll {
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 750px;
+    font-size: 0.875rem;
+    text-align: left;
+}
+
+.table thead tr {
+    background-color: #f8fafc;
+}
+
+.table th {
+    padding: 0.85rem 1.25rem;
+    color: #64748b;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+.tableRow {
+    transition: background-color 0.12s;
+}
+
+.tableRow:hover {
+    background-color: #f8fafc;
+}
+
+.tableRow td {
+    padding: 0.95rem 1.25rem;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+    vertical-align: middle;
+}
+
+.tableRow:last-child td {
+    border-bottom: none;
+}
+
+.rankCell {
+    color: #94a3b8;
+    font-weight: 800;
+    text-align: center;
+    width: 40px;
+}
+
+.problemCell {
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.statusChip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.langCell {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.8rem;
+    color: #2563eb;
+    font-weight: 600;
+}
+
+.runtimeCell {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.8rem;
+}
+
+.scoreCell {
+    font-weight: 700;
+    color: #94a3b8;
+}
+
+.scoreCellGood {
+    color: #16a34a !important;
+}
+
+.timeCell {
+    font-size: 0.78rem;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+/* ── Activity Chart ── */
+.activityChart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    gap: 0.5rem;
+    padding: 2rem 1.5rem 1rem;
+    height: 220px;
+    background-color: #ffffff;
+}
+
+.activityCol {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    height: 100%;
+}
+
+.barWrap {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 0.25rem;
+}
+
+.bar {
+    width: 50%;
+    max-width: 40px;
+    border-radius: 6px 6px 0 0;
+    min-height: 4px;
+    background-color: #ea580c;
+    transition: all 0.2s;
+}
+
+.barHours {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #ea580c;
+    margin: 0.25rem 0 0 0;
+}
+
+.barDay {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0.15rem 0 0 0;
+}
+
+.barSubs {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    margin: 0.1rem 0 0 0;
+}
+
+.activitySummary {
+    display: flex;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid #e2e8f0;
+    background-color: #fafafa;
+    flex-wrap: wrap;
+}
+
+.actStat {
+    flex: 1;
+    min-width: 120px;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    text-align: center;
+}
+
+.actStatValue {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: #ea580c;
+}
+
+.actStatLabel {
+    display: block;
+    font-size: 0.72rem;
+    color: #64748b;
+    font-weight: 600;
+    margin-top: 0.15rem;
+}
