@@ -13,11 +13,12 @@ import {
     faCircle,
 } from '@fortawesome/free-solid-svg-icons';
 
-import { leaderboardService } from '../../services/leaderboardService'; // chỉnh lại path cho đúng vị trí file thật
+// chỉnh lại path cho đúng vị trí file thật
 import { ROUTES } from '../../config/routes.config';
 import Badge from '../../components/common/Badge/Badge';
 import Button from '../../components/common/Button/Button';
 import styles from './LeaderboardPage.module.css';
+import { leaderboardService, mapApiStudent } from '../../services/leaderboardService';
 
 const cx = ClassNames.bind(styles);
 
@@ -183,55 +184,83 @@ export default function LeaderboardPage() {
     };
 
     // Chuyển đổi 1 record trả về từ API sang đúng shape mà UI đang cần.
-    const mapApiStudent = (item, index) => ({
-        rank: index + 1, // API chưa trả field rank -> giả định mảng đã sort theo totalPoints giảm dần
-        name: item.fullName,
-        id: item.code,
-        class: item.classId,
-        faculty: item.department || item.className, // "department" hiện null, tạm dùng className thay thế
-        solved: item.solvedCount ?? 0, // API hiện chưa có field này, cần backend bổ sung để hiển thị đúng
-        acRate: item.acRate ?? 0, // tương tự, tạm mặc định 0
-        points: item.totalPoints ?? 0,
-        badge: item.rankTitle ?? 'Newbie',
-        badgeColor: mapBadgeColor(item.rankTitle),
-        avatar: item.avatarUrl,
-        isMe: false, // cần so sánh item.code với mã số của user đang đăng nhập (lấy từ auth context/localStorage)
-    });
+    // const mapApiStudent = (item, index) => ({
+    //     rank: index + 1, // API chưa trả field rank -> giả định mảng đã sort theo totalPoints giảm dần
+    //     name: item.fullName,
+    //     id: item.code,
+    //     class: item.classId,
+    //     faculty: item.department || item.className, // "department" hiện null, tạm dùng className thay thế
+    //     solved: item.solvedCount ?? 0, // API hiện chưa có field này, cần backend bổ sung để hiển thị đúng
+    //     acRate: item.acRate ?? 0, // tương tự, tạm mặc định 0
+    //     points: item.totalPoints ?? 0,
+    //     badge: item.rankTitle ?? 'Newbie',
+    //     badgeColor: mapBadgeColor(item.rankTitle),
+    //     avatar: item.avatarUrl,
+    //     isMe: false, // cần so sánh item.code với mã số của user đang đăng nhập (lấy từ auth context/localStorage)
+    // });
 
     useEffect(() => {
-        let isCancelled = false;
-
-        async function fetchLeaderboard() {
-            setIsLoading(true);
-            setError(null);
+        let isMounted = true;
+        const fetchLeaderboard = async () => {
             try {
+                setIsLoading(true);
+                setError(null);
                 const response = await leaderboardService.getTop10Solvers();
-                console.log('DEBUG leaderboard response:', response); // TODO: xoá dòng này sau khi debug xong
-                // response có dạng { success, message, data, timestamp }
-                if (!isCancelled) {
-                    if (response?.success) {
-                        const list = Array.isArray(response.data) ? response.data : [];
-                        setRawStudents(list.map(mapApiStudent));
-                    } else {
-                        setError(response?.message || 'Không tải được bảng xếp hạng.');
-                        // setRawStudents(rawStudentsDefault); // fallback về dữ liệu mặc định
-                    }
+                if (isMounted && Array.isArray(response) && response.length > 0) {
+                    setRawStudents(response.map(mapApiStudent));
                 }
             } catch (err) {
-                if (!isCancelled) {
+                console.warn('Lấy leaderboard từ backend thất bại:', err);
+                if (isMounted) {
                     setError('Không tải được bảng xếp hạng. Vui lòng thử lại sau.');
-                    console.error('Lỗi khi gọi getTop10Solvers:', err);
+                    // Fallback về danh sách mặc định khi backend lỗi
+                    setRawStudents((prev) => (prev.length > 0 ? prev : rawStudentsDefault));
                 }
             } finally {
-                if (!isCancelled) setIsLoading(false);
+                if (isMounted) setIsLoading(false);
             }
-        }
+        };
 
         fetchLeaderboard();
         return () => {
-            isCancelled = true;
+            isMounted = false;
         };
-    }, [timeframe]); // gọi lại API khi đổi timeframe; thêm department vào đây nếu API hỗ trợ lọc theo khoa
+    }, []);
+
+    // useEffect(() => {
+    //     let isMounted = true;
+
+    //     async function fetchLeaderboard() {
+    //         setIsLoading(true);
+    //         setError(null);
+    //         try {
+    //             const response = await leaderboardService.getTop10Solvers();
+    //             console.log('DEBUG leaderboard response:', response); // TODO: xoá dòng này sau khi debug xong
+    //             // response có dạng { success, message, data, timestamp }
+    //             if (!isCancelled) {
+    //                 if (response?.success) {
+    //                     const list = Array.isArray(response.data.data) ? response.data.data : [];
+    //                     setRawStudents(list.map(mapApiStudent));
+    //                 } else {
+    //                     setError(response?.message || 'Không tải được bảng xếp hạng.');
+    //                     // setRawStudents(rawStudentsDefault); // fallback về dữ liệu mặc định
+    //                 }
+    //             }
+    //         } catch (err) {
+    //             if (!isCancelled) {
+    //                 setError('Không tải được bảng xếp hạng. Vui lòng thử lại sau.');
+    //                 console.error('Lỗi khi gọi getTop10Solvers:', err);
+    //             }
+    //         } finally {
+    //             if (!isCancelled) setIsLoading(false);
+    //         }
+    //     }
+
+    //     fetchLeaderboard();
+    //     return () => {
+    //         isCancelled = true;
+    //     };
+    // }, [timeframe]); // gọi lại API khi đổi timeframe; thêm department vào đây nếu API hỗ trợ lọc theo khoa
 
     const filteredStudents = rawStudents.filter((st) => {
         const matchSearch =
