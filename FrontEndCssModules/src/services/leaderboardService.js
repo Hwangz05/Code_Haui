@@ -1,6 +1,24 @@
 import { apiClient } from './api/client';
 
-//  Map CourseDto từ Spring Boot sang props của leaderboard student
+// Map rankTitle -> màu badge hiển thị
+export const mapBadgeColor = (rankTitle) => {
+    switch (rankTitle) {
+        case 'Grandmaster':
+            return 'orange';
+        case 'Master':
+            return 'purple';
+        case 'Candidate Master':
+            return 'purple';
+        case 'Expert':
+            return 'blue';
+        case 'Specialist':
+            return 'green';
+        default:
+            return 'slate';
+    }
+};
+
+// Map CourseDto/UserDto từ Spring Boot sang props của leaderboard student
 export function mapApiStudent(item, index) {
     return {
         rank: index + 1, // API chưa trả field rank -> giả định mảng đã sort theo totalPoints giảm dần
@@ -23,6 +41,7 @@ export const leaderboardService = {
     async getTop10Solvers(classId = '') {
         const query = classId ? `?classId=${classId}` : '';
         const res = await apiClient.get(`/api/v1/users/leaderboard${query}`);
-        return Array.isArray(res.data) ? res.data : [];
+
+        return Array.isArray(res?.data) ? res.data : [];
     },
 };

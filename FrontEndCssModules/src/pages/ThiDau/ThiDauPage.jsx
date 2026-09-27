@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import ClassNames from 'classnames/bind';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -15,12 +15,14 @@ import {
     faPencil,
 } from '@fortawesome/free-solid-svg-icons';
 import { faCircleDot } from '@fortawesome/free-regular-svg-icons';
+
 import { ROUTES } from '../../config/routes.config';
 import Badge from '../../components/common/Badge/Badge';
 import Button from '../../components/common/Button/Button';
 import Card from '../../components/common/Card/Card';
 import styles from './ThiDauPage.module.css';
-
+import { leaderboardService, mapApiStudent } from '../../services/leaderboardService';
+import { useAuthContext } from '../../context/AuthContext';
 const cx = ClassNames.bind(styles);
 
 export default function ThiDauPage() {
@@ -29,6 +31,8 @@ export default function ThiDauPage() {
     const [selectedDifficulty, setSelectedDifficulty] = useState('All');
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [activeTab, setActiveTab] = useState('all');
+    const [topStudents, setTopStudents] = useState([]);
+    const { user } = useAuthContext();
 
     const problemsData = [
         {
@@ -177,13 +181,39 @@ export default function ThiDauPage() {
         },
     ];
 
-    const topStudents = [
-        { rank: 1, name: 'Trần Văn Mạnh', id: '2020601111', score: 3840, solved: 142, medal: 'gold' },
-        { rank: 2, name: 'Hoàng Nhật Minh', id: '2021602345', score: 3620, solved: 135, medal: 'silver' },
-        { rank: 3, name: 'Lê Quỳnh Trang', id: '2022604567', score: 3410, solved: 128, medal: 'bronze' },
-        { rank: 4, name: 'Nguyễn Văn An (Bạn)', id: '2021600123', score: 1250, solved: 48, medal: 'none', isMe: true },
-        { rank: 5, name: 'Phạm Minh Đức', id: '2021607890', score: 1190, solved: 45, medal: 'none' },
-    ];
+    useEffect(() => {
+        let isMounted = true;
+        leaderboardService
+            .getTop10Solvers()
+            .then((data) => {
+                if (!isMounted) return;
+                const top5 = data.slice(0, 5).map((item, idx) => ({
+                    ...mapApiStudent(item, idx),
+                    medal: rankToMedal(idx + 1),
+                    isMe: user?.studentId === item.code,
+                }));
+                setTopStudents(top5);
+            })
+            .catch((err) => console.warn('Không tải được leaderboard:', err.message));
+        return () => {
+            isMounted = false;
+        };
+    }, [user]);
+
+    const rankToMedal = (rank) => {
+        if (rank === 1) return 'gold';
+        if (rank === 2) return 'silver';
+        if (rank === 3) return 'bronze';
+        return 'none';
+    };
+
+    // const topStudents = [
+    //     { rank: 1, name: 'Trần Văn Mạnh', id: '2020601111', score: 3840, solved: 142, medal: 'gold' },
+    //     { rank: 2, name: 'Hoàng Nhật Minh', id: '2021602345', score: 3620, solved: 135, medal: 'silver' },
+    //     { rank: 3, name: 'Lê Quỳnh Trang', id: '2022604567', score: 3410, solved: 128, medal: 'bronze' },
+    //     { rank: 4, name: 'Nguyễn Văn An (Bạn)', id: '2021600123', score: 1250, solved: 48, medal: 'none', isMe: true },
+    //     { rank: 5, name: 'Phạm Minh Đức', id: '2021607890', score: 1190, solved: 45, medal: 'none' },
+    // ];
 
     const getMedalIcon = (medal) => {
         const config = {
@@ -491,7 +521,7 @@ export default function ThiDauPage() {
                                             fontFamily: 'var(--font-mono)',
                                         }}
                                     >
-                                        {st.score} pts
+                                        {st.points} pts
                                     </span>
                                 </div>
                             ))}
