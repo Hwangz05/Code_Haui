@@ -25,6 +25,11 @@ public class UserDto {
     private Integer totalPoints;
     private String rankTitle;
     private Integer streakDays;
+    private Long solvedProblems;
+    private Long totalSubmissions;
+    private Double studyHours;
+    private Double passRate;
+    private String status;
 
     public static UserDto fromEntity(User user) {
         if (user == null) return null;

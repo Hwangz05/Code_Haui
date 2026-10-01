@@ -95,6 +95,13 @@ public class SubmissionService {
     }
 
     @Transactional(readOnly = true)
+    public List<SubmissionDto> getUserSubmissions(Long userId) {
+        return submissionRepository.findByUser_IdOrderByCreatedAtDesc(userId).stream()
+                .map(SubmissionDto::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public List<SubmissionDto> getProblemSubmissions(Long problemId) {
         return submissionRepository.findByProblem_IdOrderByCreatedAtDesc(problemId).stream()
                 .map(SubmissionDto::fromEntity)

@@ -14,17 +14,20 @@ import vn.edu.haui.code.modules.analytics.dto.TopSolverDto;
 import vn.edu.haui.code.modules.analytics.service.StudentActivityService;
 import vn.edu.haui.code.modules.analytics.service.TeacherAnalyticsService;
 
+import vn.edu.haui.code.modules.problem.dto.SubmissionDto;
+import vn.edu.haui.code.modules.problem.service.SubmissionService;
+
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/teacher/analytics")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
 @Tag(name = "4. Teacher Analytics", description = "API Thống kê, Báo cáo & Cảnh báo sinh viên dành cho Giảng viên")
 public class TeacherAnalyticsController {
 
     private final TeacherAnalyticsService teacherAnalyticsService;
     private final StudentActivityService studentActivityService;
+    private final SubmissionService submissionService;
 
     @GetMapping("/kpi")
     @Operation(summary = "Lấy tổng hợp chỉ số KPI giảng dạy (Tổng SV, Tỷ lệ nộp bài, Tỷ lệ Pass, SV nguy cơ)")
@@ -62,4 +65,14 @@ public class TeacherAnalyticsController {
         List<DailyActivityDto> activity = studentActivityService.getStudentActivitiesById(studentId, days);
         return ResponseEntity.ok(ApiResponse.ok(activity));
     }
+
+    @GetMapping("/student/{studentId}/submissions")
+    @Operation(summary = "Lấy lịch sử nộp bài của một sinh viên theo ID")
+    public ResponseEntity<ApiResponse<List<SubmissionDto>>> getStudentSubmissions(
+            @PathVariable Long studentId
+    ) {
+        List<SubmissionDto> submissions = submissionService.getUserSubmissions(studentId);
+        return ResponseEntity.ok(ApiResponse.ok(submissions));
+    }
 }
+

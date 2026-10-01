@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ClassNames from 'classnames/bind';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -16,69 +16,10 @@ import {
     faGraduationCap,
     faChalkboard,
 } from '@fortawesome/free-solid-svg-icons';
-
+import { teacherService, mapClassFromApi, mapMemberFromApi, enrichClass } from '../../services/teacherService';
 import styles from './TeacherClassesPage.module.css';
 
 const cx = ClassNames.bind(styles);
-
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-const CLASSES = [
-    {
-        id: 'DHKTPM16A',
-        name: 'DHKTPM16A',
-        fullName: 'Kỹ thuật phần mềm 16A',
-        students: 38,
-        avgScore: 780,
-        avgSolved: 32,
-        semester: 'HK2 2025-2026',
-        atRisk: 5,
-        members: [
-            { id: '2021600123', name: 'Nguyễn Văn An', score: 1250, solved: 48, streak: 12, studyHours: 87, status: 'GOOD' },
-            { id: '2021600124', name: 'Trần Thị Bích', score: 1180, solved: 44, streak: 8, studyHours: 72, status: 'GOOD' },
-            { id: '2021600125', name: 'Lê Minh Cường', score: 920, solved: 35, streak: 3, studyHours: 51, status: 'WARNING' },
-            { id: '2021600126', name: 'Phạm Thanh Dung', score: 760, solved: 28, streak: 1, studyHours: 33, status: 'DANGER' },
-            { id: '2021600127', name: 'Hoàng Văn Em', score: 1050, solved: 40, streak: 6, studyHours: 65, status: 'GOOD' },
-            { id: '2021600128', name: 'Vũ Thị Fảnh', score: 850, solved: 33, streak: 4, studyHours: 48, status: 'WARNING' },
-            { id: '2021600129', name: 'Đặng Minh Giang', score: 680, solved: 22, streak: 0, studyHours: 21, status: 'DANGER' },
-            { id: '2021600130', name: 'Ngô Thị Huyền', score: 1320, solved: 52, streak: 18, studyHours: 98, status: 'GOOD' },
-        ],
-    },
-    {
-        id: 'DHKTPM16B',
-        name: 'DHKTPM16B',
-        fullName: 'Kỹ thuật phần mềm 16B',
-        students: 36,
-        avgScore: 720,
-        avgSolved: 28,
-        semester: 'HK2 2025-2026',
-        atRisk: 7,
-        members: [
-            { id: '2021600201', name: 'Trịnh Văn Anh', score: 1100, solved: 42, streak: 9, studyHours: 76, status: 'GOOD' },
-            { id: '2021600202', name: 'Bùi Thị Bắc', score: 950, solved: 36, streak: 5, studyHours: 60, status: 'GOOD' },
-            { id: '2021600203', name: 'Cao Minh Châu', score: 620, solved: 18, streak: 0, studyHours: 15, status: 'DANGER' },
-            { id: '2021600204', name: 'Dương Thị Đào', score: 780, solved: 30, streak: 3, studyHours: 44, status: 'WARNING' },
-            { id: '2021600205', name: 'Đinh Văn Ế', score: 1200, solved: 46, streak: 14, studyHours: 90, status: 'GOOD' },
-            { id: '2021600206', name: 'Giang Thị Phương', score: 540, solved: 14, streak: 0, studyHours: 10, status: 'DANGER' },
-        ],
-    },
-    {
-        id: 'DHTH15',
-        name: 'DHTH15',
-        fullName: 'Tin học ứng dụng 15',
-        students: 40,
-        avgScore: 650,
-        avgSolved: 24,
-        semester: 'HK2 2025-2026',
-        atRisk: 9,
-        members: [
-            { id: '2020600301', name: 'Hà Thị Giang', score: 980, solved: 38, streak: 7, studyHours: 68, status: 'GOOD' },
-            { id: '2020600302', name: 'Lý Văn Hùng', score: 720, solved: 26, streak: 2, studyHours: 38, status: 'WARNING' },
-            { id: '2020600303', name: 'Mai Thị Ina', score: 580, solved: 16, streak: 0, studyHours: 12, status: 'DANGER' },
-            { id: '2020600304', name: 'Nguyễn Văn Kiên', score: 1100, solved: 44, streak: 11, studyHours: 80, status: 'GOOD' },
-            { id: '2020600305', name: 'Phan Thị Linh', score: 450, solved: 10, streak: 0, studyHours: 8, status: 'DANGER' },
-        ],
-    },
-];
 
 const STATUS_CONFIG = {
     GOOD: { label: 'Tốt', color: 'var(--color-success)', bg: 'rgba(16,185,129,0.1)' },
@@ -88,9 +29,54 @@ const STATUS_CONFIG = {
 
 export default function TeacherClassesPage() {
     const navigate = useNavigate();
-    const [expandedClass, setExpandedClass] = useState('DHKTPM16A');
+    const [classes, setClasses] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [expandedClass, setExpandedClass] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const fetchData = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
+
+                const classList = await teacherService.getClasses();
+                const mapped = (Array.isArray(classList) ? classList : []).map(mapClassFromApi);
+
+                // Tải sinh viên của tất cả lớp song song; lớp nào lỗi thì để rỗng
+                const memberLists = await Promise.all(
+                    mapped.map((cls) =>
+                        teacherService
+                            .getStudentsByClass(cls.id)
+                            .then((list) => (Array.isArray(list) ? list.map(mapMemberFromApi) : []))
+                            .catch((err) => {
+                                console.warn('Không tải được sinh viên của lớp', cls.id, err);
+                                return [];
+                            }),
+                    ),
+                );
+
+                if (!isMounted) return;
+                const enriched = mapped.map((cls, i) => enrichClass(cls, memberLists[i]));
+                setClasses(enriched);
+                if (enriched[0]) setExpandedClass(enriched[0].id);
+            } catch (err) {
+                console.error('Lỗi tải danh sách lớp:', err);
+                if (isMounted) setError('Không tải được danh sách lớp. Vui lòng thử lại sau.');
+            } finally {
+                if (isMounted) setIsLoading(false);
+            }
+        };
+
+        fetchData();
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     const toggleClass = (classId) => {
         setExpandedClass(expandedClass === classId ? null : classId);
@@ -98,16 +84,34 @@ export default function TeacherClassesPage() {
 
     const getFilteredMembers = (members) => {
         return members.filter((m) => {
-            const matchSearch =
-                m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                m.id.includes(searchQuery);
+            const matchSearch = m.name.toLowerCase().includes(searchQuery.toLowerCase()) || m.id.includes(searchQuery);
             const matchStatus = statusFilter === 'ALL' || m.status === statusFilter;
             return matchSearch && matchStatus;
         });
     };
 
-    const totalStudents = CLASSES.reduce((s, c) => s + c.students, 0);
-    const totalAtRisk = CLASSES.reduce((s, c) => s + c.atRisk, 0);
+    const totalStudents = classes.reduce((s, c) => s + c.students, 0);
+    const totalAtRisk = classes.reduce((s, c) => s + c.atRisk, 0);
+
+    if (isLoading) {
+        return (
+            <div className={cx('page')}>
+                <div className={cx('container')}>
+                    <p style={{ textAlign: 'center', padding: '4rem 0' }}>Đang tải danh sách lớp...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className={cx('page')}>
+                <div className={cx('container')}>
+                    <p style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--color-danger, red)' }}>{error}</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={cx('page')}>
@@ -133,9 +137,13 @@ export default function TeacherClassesPage() {
                     </div>
                 </div>
 
+                {classes.length === 0 && (
+                    <p style={{ textAlign: 'center', padding: '2rem 0' }}>Chưa có lớp học phần nào.</p>
+                )}
+
                 {/* Class Summary Cards */}
                 <div className={cx('classSummaryGrid')}>
-                    {CLASSES.map((cls) => (
+                    {classes.map((cls) => (
                         <div
                             key={cls.id}
                             className={cx('classSummaryCard', expandedClass === cls.id && 'classSummaryCardActive')}
@@ -198,9 +206,10 @@ export default function TeacherClassesPage() {
                 </div>
 
                 {/* Expanded Class Student Table */}
-                {CLASSES.map((cls) => {
+                {classes.map((cls) => {
                     if (expandedClass !== cls.id) return null;
                     const filtered = getFilteredMembers(cls.members);
+
                     return (
                         <div key={cls.id} className={cx('studentTableWrap')}>
                             <div className={cx('tableHeader')}>
@@ -247,7 +256,9 @@ export default function TeacherClassesPage() {
                                                         <td>
                                                             <div className={cx('studentCell')}>
                                                                 <div className={cx('studentAvatar')}>
-                                                                    {student.name.charAt(student.name.lastIndexOf(' ') + 1)}
+                                                                    {student.name.charAt(
+                                                                        student.name.lastIndexOf(' ') + 1,
+                                                                    )}
                                                                 </div>
                                                                 <div>
                                                                     <p className={cx('studentName')}>{student.name}</p>
@@ -276,13 +287,13 @@ export default function TeacherClassesPage() {
                                                         <td>
                                                             <span
                                                                 className={cx('statusBadge')}
-                                                                style={{
-                                                                    color: status.color,
-                                                                    background: status.bg,
-                                                                }}
+                                                                style={{ color: status.color, background: status.bg }}
                                                             >
                                                                 {student.status === 'DANGER' && (
-                                                                    <FontAwesomeIcon icon={faTriangleExclamation} style={{ marginRight: 4 }} />
+                                                                    <FontAwesomeIcon
+                                                                        icon={faTriangleExclamation}
+                                                                        style={{ marginRight: 4 }}
+                                                                    />
                                                                 )}
                                                                 {status.label}
                                                             </span>
@@ -297,7 +308,10 @@ export default function TeacherClassesPage() {
                                                                 }
                                                             >
                                                                 Chi tiết
-                                                                <FontAwesomeIcon icon={faArrowRight} style={{ marginLeft: 6 }} />
+                                                                <FontAwesomeIcon
+                                                                    icon={faArrowRight}
+                                                                    style={{ marginLeft: 6 }}
+                                                                />
                                                             </button>
                                                         </td>
                                                     </tr>

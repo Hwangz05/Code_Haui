@@ -67,10 +67,11 @@ public class SecurityConfig {
                                 "/api/v1/categories/**",
                                 "/api/v1/courses/**",
                                 "/api/v1/lessons/**",
-                                "/api/v1/classes/**"
+                                "/api/v1/classes/**",
+                                "/api/v1/users/**",
+                                "/api/v1/teacher/**",
+                                "/api/v1/submissions/**"
                         ).permitAll()
-                        // Teacher-only endpoints
-                        .requestMatchers("/api/v1/teacher/**").hasAnyRole("TEACHER", "ADMIN")
                         // Any other request must be authenticated
                         .anyRequest().authenticated()
                 )

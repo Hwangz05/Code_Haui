@@ -22,8 +22,22 @@ import Button from '../../components/common/Button/Button';
 import Card from '../../components/common/Card/Card';
 import styles from './ThiDauPage.module.css';
 import { leaderboardService, mapApiStudent } from '../../services/leaderboardService';
+import {
+    problemService,
+    mapHauiProblemFromApi,
+    mapLeetCodeProblemFromApi,
+} from '../../services/problemService';
+import { userService } from '../../services/userService';
 import { useAuthContext } from '../../context/AuthContext';
 const cx = ClassNames.bind(styles);
+
+const defaultTopStudents = [
+    { rank: 1, name: 'Trần Văn Mạnh', id: '2020601111', solved: 5, points: 3840, medal: 'gold', isMe: false },
+    { rank: 2, name: 'Lê Quỳnh Trang', id: '2022604567', solved: 5, points: 3410, medal: 'silver', isMe: false },
+    { rank: 3, name: 'Trịnh Gia Bảo', id: '2022601999', solved: 3, points: 2980, medal: 'bronze', isMe: false },
+    { rank: 4, name: 'Phan Thanh Tùng', id: '2020603412', solved: 4, points: 2650, medal: 'none', isMe: false },
+    { rank: 5, name: 'Tạ Minh Quang', id: '2021604477', solved: 2, points: 2200, medal: 'none', isMe: false },
+];
 
 export default function ThiDauPage() {
     const navigate = useNavigate();
@@ -31,10 +45,22 @@ export default function ThiDauPage() {
     const [selectedDifficulty, setSelectedDifficulty] = useState('All');
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [activeTab, setActiveTab] = useState('all');
-    const [topStudents, setTopStudents] = useState([]);
+    const [topStudents, setTopStudents] = useState(defaultTopStudents);
+    const [problems, setProblems] = useState([]);
+    const [loadingProblems, setLoadingProblems] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 15;
     const { user } = useAuthContext();
 
-    const problemsData = [
+    const isTeacher =
+        user?.role === 'TEACHER' ||
+        (user?.studentId && String(user.studentId).toUpperCase().startsWith('GV')) ||
+        (user?.code && String(user.code).toUpperCase().startsWith('GV'));
+
+    const userCode = user?.studentId || user?.code || (isTeacher ? 'GV2026' : '2020601111');
+    const userId = user?.id || (isTeacher ? 1 : 3);
+
+    const fallbackProblems = [
         {
             id: 1,
             title: 'Tìm số lớn nhất trong mảng (Max Element)',
@@ -44,8 +70,9 @@ export default function ThiDauPage() {
             diffVariant: 'green',
             acRate: '84.5%',
             points: 100,
-            solved: true,
+            solved: false,
             tags: ['Array', 'Math'],
+            isHaUI: true,
         },
         {
             id: 2,
@@ -56,8 +83,9 @@ export default function ThiDauPage() {
             diffVariant: 'green',
             acRate: '72.3%',
             points: 100,
-            solved: true,
+            solved: false,
             tags: ['Math', 'Number Theory'],
+            isHaUI: true,
         },
         {
             id: 3,
@@ -68,8 +96,9 @@ export default function ThiDauPage() {
             diffVariant: 'green',
             acRate: '79.1%',
             points: 100,
-            solved: true,
+            solved: false,
             tags: ['String', 'Two Pointers'],
+            isHaUI: true,
         },
         {
             id: 4,
@@ -82,6 +111,7 @@ export default function ThiDauPage() {
             points: 120,
             solved: false,
             tags: ['Binary Search', 'Array'],
+            isHaUI: true,
         },
         {
             id: 5,
@@ -94,6 +124,7 @@ export default function ThiDauPage() {
             points: 250,
             solved: false,
             tags: ['DP', 'Backtracking'],
+            isHaUI: true,
         },
         {
             id: 6,
@@ -104,95 +135,95 @@ export default function ThiDauPage() {
             diffVariant: 'yellow',
             acRate: '51.8%',
             points: 200,
-            solved: true,
+            solved: false,
             tags: ['Graph', 'BFS', 'Queue'],
-        },
-        {
-            id: 7,
-            title: 'Dãy con tăng dài nhất (LIS - Longest Increasing)',
-            slug: 'day-con-tang-dai-nhat',
-            category: 'Quy hoạch động',
-            difficulty: 'Trung bình',
-            diffVariant: 'yellow',
-            acRate: '41.6%',
-            points: 250,
-            solved: false,
-            tags: ['DP', 'Binary Search'],
-        },
-        {
-            id: 8,
-            title: 'Cây nhị phân tìm kiếm cân bằng (AVL Tree)',
-            slug: 'cay-nhi-phan-avl',
-            category: 'Cây & Cấu trúc nâng cao',
-            difficulty: 'Khó',
-            diffVariant: 'red',
-            acRate: '28.9%',
-            points: 400,
-            solved: false,
-            tags: ['Tree', 'AVL', 'Data Structure'],
-        },
-        {
-            id: 9,
-            title: 'Thuật toán tìm đường ngắn nhất Dijkstra',
-            slug: 'thuat-toan-dijkstra',
-            category: 'Đồ thị',
-            difficulty: 'Khó',
-            diffVariant: 'red',
-            acRate: '33.4%',
-            points: 400,
-            solved: false,
-            tags: ['Graph', 'Shortest Path', 'Heap'],
-        },
-        {
-            id: 10,
-            title: 'Thiết kế hệ thống LRU Cache trong Java',
-            slug: 'thiet-ke-lru-cache',
-            category: 'Cây & Cấu trúc nâng cao',
-            difficulty: 'Khó',
-            diffVariant: 'red',
-            acRate: '24.1%',
-            points: 500,
-            solved: false,
-            tags: ['Design', 'Hash Table', 'Linked List'],
-        },
-        {
-            id: 11,
-            title: 'Sắp xếp trộn (Merge Sort)',
-            slug: 'sap-xep-tron-merge-sort',
-            category: 'Sắp xếp & Tìm kiếm',
-            difficulty: 'Dễ',
-            diffVariant: 'green',
-            acRate: '75.0%',
-            points: 120,
-            solved: true,
-            tags: ['Sort', 'Divide and Conquer'],
-        },
-        {
-            id: 12,
-            title: 'Bài toán 8 quân hậu (N-Queens Backtracking)',
-            slug: 'bai-toan-8-quan-hau',
-            category: 'Toán học',
-            difficulty: 'Trung bình',
-            diffVariant: 'yellow',
-            acRate: '48.7%',
-            points: 220,
-            solved: false,
-            tags: ['Backtracking', 'Recursion'],
+            isHaUI: true,
         },
     ];
 
+    // 1. Tải danh sách bài tập từ LeetCode API + Bài tập HaUI từ Backend
+    useEffect(() => {
+        let isMounted = true;
+        const loadAllProblems = async () => {
+            try {
+                setLoadingProblems(true);
+                // Gọi song song LeetCode API và Backend HaUI
+                const [leetCodeData, hauiRes] = await Promise.allSettled([
+                    problemService.getLeetCodeProblems(),
+                    problemService.getProblems({ size: 50 }),
+                ]);
+
+                let combined = [];
+
+                // Lấy danh sách bài nộp của user từ backend
+                let solvedProblemIds = new Set();
+                let solvedProblemTitles = new Set();
+
+                if (!isTeacher && userId) {
+                    try {
+                        const subsList = await userService.getUserSubmissions(userId);
+                        subsList
+                            .filter((s) => s.status === 'AC' || s.status === 'ACCEPTED')
+                            .forEach((s) => {
+                                if (s.problemId) solvedProblemIds.add(Number(s.problemId));
+                                if (s.problemTitle) solvedProblemTitles.add(s.problemTitle.toLowerCase().trim());
+                            });
+                    } catch (e) {
+                        console.warn('Không tải được bài nộp của user:', e.message);
+                    }
+                }
+
+                // Nếu có bài tập từ thầy cô trên Backend HaUI
+                if (hauiRes.status === 'fulfilled' && hauiRes.value?.items?.length > 0) {
+                    const hauiProblems = hauiRes.value.items.map((p) =>
+                        mapHauiProblemFromApi(p, solvedProblemIds, solvedProblemTitles)
+                    );
+                    combined.push(...hauiProblems);
+                }
+
+                // Nếu tải được LeetCode API
+                if (leetCodeData.status === 'fulfilled' && Array.isArray(leetCodeData.value) && leetCodeData.value.length > 0) {
+                    const leetProblems = leetCodeData.value.map(mapLeetCodeProblemFromApi);
+                    combined.push(...leetProblems);
+                }
+
+                if (isMounted) {
+                    if (combined.length > 0) {
+                        setProblems(combined);
+                    } else {
+                        setProblems(fallbackProblems);
+                    }
+                }
+            } catch (err) {
+                console.warn('Lỗi khi tải bài tập:', err);
+                if (isMounted) setProblems(fallbackProblems);
+            } finally {
+                if (isMounted) setLoadingProblems(false);
+            }
+        };
+
+        loadAllProblems();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [userCode]);
+
+    // 2. Tải Bảng xếp hạng Top Sinh viên
     useEffect(() => {
         let isMounted = true;
         leaderboardService
             .getTop10Solvers()
             .then((data) => {
                 if (!isMounted) return;
-                const top5 = data.slice(0, 5).map((item, idx) => ({
-                    ...mapApiStudent(item, idx),
-                    medal: rankToMedal(idx + 1),
-                    isMe: user?.studentId === item.code,
-                }));
-                setTopStudents(top5);
+                if (Array.isArray(data) && data.length > 0) {
+                    const top5 = data.slice(0, 5).map((item, idx) => ({
+                        ...mapApiStudent(item, idx),
+                        medal: rankToMedal(idx + 1),
+                        isMe: !isTeacher && ((user?.studentId || user?.code) === item.code),
+                    }));
+                    setTopStudents(top5);
+                }
             })
             .catch((err) => console.warn('Không tải được leaderboard:', err.message));
         return () => {
@@ -207,14 +238,6 @@ export default function ThiDauPage() {
         return 'none';
     };
 
-    // const topStudents = [
-    //     { rank: 1, name: 'Trần Văn Mạnh', id: '2020601111', score: 3840, solved: 142, medal: 'gold' },
-    //     { rank: 2, name: 'Hoàng Nhật Minh', id: '2021602345', score: 3620, solved: 135, medal: 'silver' },
-    //     { rank: 3, name: 'Lê Quỳnh Trang', id: '2022604567', score: 3410, solved: 128, medal: 'bronze' },
-    //     { rank: 4, name: 'Nguyễn Văn An (Bạn)', id: '2021600123', score: 1250, solved: 48, medal: 'none', isMe: true },
-    //     { rank: 5, name: 'Phạm Minh Đức', id: '2021607890', score: 1190, solved: 45, medal: 'none' },
-    // ];
-
     const getMedalIcon = (medal) => {
         const config = {
             gold: { icon: faTrophy, color: 'var(--color-haui-gold)' },
@@ -227,18 +250,64 @@ export default function ThiDauPage() {
         return <FontAwesomeIcon icon={icon} style={{ color }} />;
     };
 
-    // Filtering
-    const filteredProblems = problemsData.filter((item) => {
+    // Lấy danh sách Categories độc nhất từ tất cả tags
+    const availableCategories = [
+        'All',
+        'Array',
+        'String',
+        'Hash Table',
+        'Dynamic Programming',
+        'Math',
+        'Sorting',
+        'Greedy',
+        'Depth-First Search',
+        'Binary Search',
+        'Tree',
+        'Two Pointers',
+        'Graph',
+        'Stack',
+        'Linked List',
+    ];
+
+    // Filtering logic
+    const filteredProblems = problems.filter((item) => {
         const matchSearch =
             item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
+            item.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            String(item.id).includes(searchQuery);
         const matchDiff = selectedDifficulty === 'All' || item.difficulty === selectedDifficulty;
-        const matchCat = selectedCategory === 'All' || item.category === selectedCategory;
+        const matchCat =
+            selectedCategory === 'All' ||
+            item.category === selectedCategory ||
+            item.tags.some((t) => t.toLowerCase() === selectedCategory.toLowerCase());
         const matchTab =
-            activeTab === 'all' || (activeTab === 'solved' && item.solved) || (activeTab === 'hot' && item.points >= 250);
+            activeTab === 'all' ||
+            (activeTab === 'haui' && item.isHaUI) ||
+            (activeTab === 'leetcode' && !item.isHaUI) ||
+            (activeTab === 'solved' && item.solved) ||
+            (activeTab === 'hot' && item.points >= 250);
 
         return matchSearch && matchDiff && matchCat && matchTab;
     });
+
+    // Pagination logic
+    const totalPages = Math.ceil(filteredProblems.length / itemsPerPage) || 1;
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const currentProblems = filteredProblems.slice(startIndex, startIndex + itemsPerPage);
+
+    const handlePageChange = (page) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+            window.scrollTo({ top: 300, behavior: 'smooth' });
+        }
+    };
+
+    const myRankNumber =
+        topStudents.findIndex((st) => st.id === userCode) !== -1
+            ? topStudents.findIndex((st) => st.id === userCode) + 1
+            : (user?.totalPoints >= 3800 ? 1 : user?.totalPoints >= 3400 ? 2 : user?.totalPoints >= 2900 ? 3 : 1);
+
+    const solvedCount = problems.filter((p) => p.solved).length;
 
     return (
         <div className="container" style={{ paddingBottom: '3rem' }}>
@@ -256,26 +325,53 @@ export default function ThiDauPage() {
                     </p>
                 </div>
 
-                <div className={cx('statsRow')}>
-                    <div className={cx('statItem')}>
-                        <div className={cx('statVal')}>48 / 120</div>
-                        <div className={cx('statTxt')}>Đã hoàn thành</div>
-                    </div>
-                    <div className={cx('divider')}></div>
-                    <div className={cx('statItem')}>
-                        <div className={cx('statVal')} style={{ color: 'var(--color-success)' }}>
-                            #4
+                {isTeacher ? (
+                    <div className={cx('statsRow')}>
+                        <div className={cx('statItem')}>
+                            <div className={cx('statVal')} style={{ color: 'var(--color-primary)' }}>
+                                {problems.length > 0 ? `${problems.length}+` : '1,200+'}
+                            </div>
+                            <div className={cx('statTxt')}>Tổng bài thi đấu</div>
                         </div>
-                        <div className={cx('statTxt')}>Hạng lớp</div>
-                    </div>
-                    <div className={cx('divider')}></div>
-                    <div className={cx('statItem')}>
-                        <div className={cx('statVal')} style={{ color: 'var(--color-info)' }}>
-                            1,250
+                        <div className={cx('divider')}></div>
+                        <div className={cx('statItem')}>
+                            <div className={cx('statVal')} style={{ color: 'var(--color-success)' }}>
+                                Giảng viên
+                            </div>
+                            <div className={cx('statTxt')}>Vai trò</div>
                         </div>
-                        <div className={cx('statTxt')}>Điểm tích lũy</div>
+                        <div className={cx('divider')}></div>
+                        <div className={cx('statItem')}>
+                            <div className={cx('statVal')} style={{ color: 'var(--color-info)' }}>
+                                {user?.department || 'Khoa CNTT'}
+                            </div>
+                            <div className={cx('statTxt')}>Đơn vị</div>
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    <div className={cx('statsRow')}>
+                        <div className={cx('statItem')}>
+                            <div className={cx('statVal')}>
+                                {solvedCount} / {problems.length > 0 ? problems.length : 15}
+                            </div>
+                            <div className={cx('statTxt')}>Đã hoàn thành</div>
+                        </div>
+                        <div className={cx('divider')}></div>
+                        <div className={cx('statItem')}>
+                            <div className={cx('statVal')} style={{ color: 'var(--color-success)' }}>
+                                #{myRankNumber}
+                            </div>
+                            <div className={cx('statTxt')}>Thứ hạng HaUI</div>
+                        </div>
+                        <div className={cx('divider')}></div>
+                        <div className={cx('statItem')}>
+                            <div className={cx('statVal')} style={{ color: 'var(--color-info)' }}>
+                                {user?.totalPoints ? Number(user.totalPoints).toLocaleString() : '3,840'}
+                            </div>
+                            <div className={cx('statTxt')}>Điểm tích lũy</div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* 2. Main Grid */}
@@ -284,23 +380,35 @@ export default function ThiDauPage() {
                     {/* Sub Tabs */}
                     <div className={cx('subTabs')}>
                         <button
-                            onClick={() => setActiveTab('all')}
+                            onClick={() => { setActiveTab('all'); setCurrentPage(1); }}
                             className={`${styles.subTabBtn} ${activeTab === 'all' ? styles.subTabActive : ''}`}
                         >
-                            Tất cả bài thi đấu ({problemsData.length})
+                            Tất cả ({problems.length})
                         </button>
                         <button
-                            onClick={() => setActiveTab('solved')}
+                            onClick={() => { setActiveTab('haui'); setCurrentPage(1); }}
+                            className={`${styles.subTabBtn} ${activeTab === 'haui' ? styles.subTabActive : ''}`}
+                        >
+                            🏫 Bài tập HaUI ({problems.filter((p) => p.isHaUI).length})
+                        </button>
+                        <button
+                            onClick={() => { setActiveTab('leetcode'); setCurrentPage(1); }}
+                            className={`${styles.subTabBtn} ${activeTab === 'leetcode' ? styles.subTabActive : ''}`}
+                        >
+                            ⚡ LeetCode ({problems.filter((p) => !p.isHaUI).length})
+                        </button>
+                        <button
+                            onClick={() => { setActiveTab('solved'); setCurrentPage(1); }}
                             className={`${styles.subTabBtn} ${activeTab === 'solved' ? styles.subTabActive : ''}`}
                         >
-                            Đã giải quyết (5)
+                            Đã giải ({problems.filter((p) => p.solved).length})
                         </button>
                         <button
-                            onClick={() => setActiveTab('hot')}
+                            onClick={() => { setActiveTab('hot'); setCurrentPage(1); }}
                             className={`${styles.subTabBtn} ${activeTab === 'hot' ? styles.subTabActive : ''}`}
                         >
                             <FontAwesomeIcon icon={faFire} className={cx('fafire-icon')} />
-                            Điểm cao & Thử thách khó
+                            Thử thách khó
                         </button>
                     </div>
 
@@ -312,30 +420,37 @@ export default function ThiDauPage() {
                             </span>
                             <input
                                 type="text"
-                                placeholder="Tìm theo tên bài hoặc tag (Array, DP, Tree...)"
+                                placeholder="Tìm kiếm tên bài, ID hoặc chủ đề (Array, DP, Tree...)"
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    setCurrentPage(1);
+                                }}
                                 className={styles.filterInput}
                             />
                         </div>
 
                         <select
                             value={selectedCategory}
-                            onChange={(e) => setSelectedCategory(e.target.value)}
+                            onChange={(e) => {
+                                setSelectedCategory(e.target.value);
+                                setCurrentPage(1);
+                            }}
                             className={cx('filterSelect')}
                         >
-                            <option value="All">Tất cả chủ đề</option>
-                            <option value="Mảng & Chuỗi">Mảng & Chuỗi</option>
-                            <option value="Toán học">Toán học</option>
-                            <option value="Sắp xếp & Tìm kiếm">Sắp xếp & Tìm kiếm</option>
-                            <option value="Quy hoạch động">Quy hoạch động</option>
-                            <option value="Đồ thị">Đồ thị</option>
-                            <option value="Cây & Cấu trúc nâng cao">Cây & Cấu trúc</option>
+                            {availableCategories.map((cat) => (
+                                <option key={cat} value={cat}>
+                                    {cat === 'All' ? 'Tất cả chủ đề' : cat}
+                                </option>
+                            ))}
                         </select>
 
                         <select
                             value={selectedDifficulty}
-                            onChange={(e) => setSelectedDifficulty(e.target.value)}
+                            onChange={(e) => {
+                                setSelectedDifficulty(e.target.value);
+                                setCurrentPage(1);
+                            }}
                             className={cx('filterSelect')}
                         >
                             <option value="All">Tất cả độ khó</option>
@@ -347,110 +462,161 @@ export default function ThiDauPage() {
 
                     {/* Problem Table */}
                     <div className={cx('tableCard')}>
-                        <table className={cx('table')}>
-                            <thead>
-                                <tr>
-                                    <th style={{ width: '3.5rem', textAlign: 'center', fontSize: '0.75rem' }}>
-                                        Trạng thái
-                                    </th>
-                                    <th style={{ fontSize: '0.75rem' }}>Tên bài thi đấu</th>
-                                    <th style={{ fontSize: '0.75rem' }}>Chủ đề</th>
-                                    <th style={{ fontSize: '0.75rem' }}>Độ khó</th>
-                                    <th style={{ textAlign: 'center', fontSize: '0.75rem' }}>Tỷ lệ AC</th>
-                                    <th style={{ textAlign: 'center', fontSize: '0.75rem' }}>Điểm</th>
-                                    <th style={{ textAlign: 'center', fontSize: '0.75rem' }}>Hành động</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredProblems.length === 0 ? (
+                        {loadingProblems ? (
+                            <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                <div style={{ fontSize: '1.2rem', marginBottom: '0.5rem', fontWeight: 600 }}>
+                                    Đang tải kho bài tập thuật toán...
+                                </div>
+                                <span style={{ fontSize: '0.9rem', color: 'var(--text-dim)' }}>
+                                    Đang kết nối LeetCode API & Hệ thống HaUI
+                                </span>
+                            </div>
+                        ) : (
+                            <table className={cx('table')}>
+                                <thead>
                                     <tr>
-                                        <td
-                                            colSpan="7"
-                                            style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-dim)' }}
-                                        >
-                                            Không tìm thấy bài thi đấu phù hợp với bộ lọc!
-                                        </td>
+                                        <th style={{ width: '3.5rem', textAlign: 'center', fontSize: '0.75rem' }}>
+                                            Trạng thái
+                                        </th>
+                                        <th style={{ fontSize: '0.75rem' }}>Tên bài thi đấu</th>
+                                        <th style={{ fontSize: '0.75rem' }}>Chủ đề</th>
+                                        <th style={{ fontSize: '0.75rem' }}>Độ khó</th>
+                                        <th style={{ textAlign: 'center', fontSize: '0.75rem' }}>Tỷ lệ AC</th>
+                                        <th style={{ textAlign: 'center', fontSize: '0.75rem' }}>Điểm</th>
+                                        <th style={{ textAlign: 'center', fontSize: '0.75rem' }}>Hành động</th>
                                     </tr>
-                                ) : (
-                                    filteredProblems.map((prob) => (
-                                        <tr
-                                            key={prob.id}
-                                            onClick={() => navigate(`/thi-dau/${prob.slug}`)}
-                                            style={{ cursor: 'pointer' }}
-                                        >
-                                            <td style={{ textAlign: 'center' }}>
-                                                {prob.solved ? (
-                                                    <span className={styles.solvedIcon} title="Đã hoàn thành">
-                                                        <FontAwesomeIcon icon={faCheck} className={cx('faCheck-icon')} />
-                                                    </span>
-                                                ) : (
-                                                    <span className={styles.unsolvedIcon} title="Chưa làm">
-                                                        <FontAwesomeIcon
-                                                            icon={faCircleDot}
-                                                            className={cx('faCircleDot-icon')}
-                                                        />
-                                                    </span>
-                                                )}
-                                            </td>
-                                            <td>
-                                                <div className={styles.probTitle}>
-                                                    {prob.id}. {prob.title}
-                                                </div>
-                                                <div className={styles.tagGroup}>
-                                                    {prob.tags.map((t, idx) => (
-                                                        <span key={idx} className={styles.tag}>
-                                                            #{t}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </td>
-                                            <td style={{ color: 'var(--text-muted)' }}>{prob.category}</td>
-                                            <td>
-                                                <Badge variant={prob.diffVariant}>{prob.difficulty}</Badge>
-                                            </td>
-                                            <td style={{ textAlign: 'center', fontFamily: 'var(--font-mono)' }}>
-                                                {prob.acRate}
-                                            </td>
+                                </thead>
+                                <tbody>
+                                    {currentProblems.length === 0 ? (
+                                        <tr>
                                             <td
-                                                style={{
-                                                    textAlign: 'center',
-                                                    fontWeight: 800,
-                                                    color: 'var(--color-primary)',
-                                                }}
+                                                colSpan="7"
+                                                style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-dim)' }}
                                             >
-                                                +{prob.points}
-                                            </td>
-                                            <td style={{ textAlign: 'center' }}>
-                                                <Button
-                                                    variant={prob.solved ? 'secondary' : 'primary'}
-                                                    size="sm"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        navigate(`/thi-dau/${prob.slug}`);
-                                                    }}
-                                                >
-                                                    {prob.solved ? 'Làm lại' : 'Vào thi đấu'}
-                                                </Button>
+                                                Không tìm thấy bài thi đấu phù hợp với bộ lọc!
                                             </td>
                                         </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+                                    ) : (
+                                        currentProblems.map((prob) => (
+                                            <tr
+                                                key={`${prob.isHaUI ? 'haui' : 'lc'}-${prob.id}`}
+                                                onClick={() => navigate(`/thi-dau/${prob.slug}`)}
+                                                style={{ cursor: 'pointer' }}
+                                            >
+                                                <td style={{ textAlign: 'center' }}>
+                                                    {prob.solved ? (
+                                                        <span className={styles.solvedIcon} title="Đã hoàn thành">
+                                                            <FontAwesomeIcon icon={faCheck} className={cx('faCheck-icon')} />
+                                                        </span>
+                                                    ) : (
+                                                        <span className={styles.unsolvedIcon} title="Chưa làm">
+                                                            <FontAwesomeIcon
+                                                                icon={faCircleDot}
+                                                                className={cx('faCircleDot-icon')}
+                                                            />
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    <div className={styles.probTitle}>
+                                                        <span style={{ fontWeight: 800, color: 'var(--color-primary)', marginRight: '0.4rem' }}>
+                                                            #{prob.id}
+                                                        </span>
+                                                        {prob.title}
+                                                        {prob.isHaUI && (
+                                                            <span
+                                                                style={{
+                                                                    marginLeft: '0.5rem',
+                                                                    fontSize: '0.7rem',
+                                                                    background: 'rgba(249, 115, 22, 0.15)',
+                                                                    color: 'var(--color-primary)',
+                                                                    padding: '2px 6px',
+                                                                    borderRadius: '4px',
+                                                                    fontWeight: 700,
+                                                                }}
+                                                            >
+                                                                HaUI
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className={styles.tagGroup}>
+                                                        {prob.tags.slice(0, 3).map((t, idx) => (
+                                                            <span key={idx} className={styles.tag}>
+                                                                #{t}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </td>
+                                                <td style={{ color: 'var(--text-muted)' }}>{prob.category}</td>
+                                                <td>
+                                                    <Badge variant={prob.diffVariant}>{prob.difficulty}</Badge>
+                                                </td>
+                                                <td style={{ textAlign: 'center', fontFamily: 'var(--font-mono)' }}>
+                                                    {prob.acRate}
+                                                </td>
+                                                <td
+                                                    style={{
+                                                        textAlign: 'center',
+                                                        fontWeight: 800,
+                                                        color: 'var(--color-primary)',
+                                                    }}
+                                                >
+                                                    +{prob.points}
+                                                </td>
+                                                <td style={{ textAlign: 'center' }}>
+                                                    <Button
+                                                        variant={prob.solved ? 'secondary' : 'primary'}
+                                                        size="sm"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            navigate(`/thi-dau/${prob.slug}`);
+                                                        }}
+                                                    >
+                                                        {prob.solved ? 'Làm lại' : 'Vào thi đấu'}
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        )}
 
                         {/* Pagination Footer */}
                         <div className={cx('pagination')}>
                             <span>
-                                Hiển thị {filteredProblems.length} / {problemsData.length} bài thi đấu
+                                Hiển thị {filteredProblems.length > 0 ? startIndex + 1 : 0} -{' '}
+                                {Math.min(startIndex + itemsPerPage, filteredProblems.length)} / {filteredProblems.length} bài
                             </span>
                             <div className={cx('pageBtnGroup')}>
-                                <button className={cx('pageBtn')} disabled>
+                                <button
+                                    className={cx('pageBtn')}
+                                    onClick={() => handlePageChange(currentPage - 1)}
+                                    disabled={currentPage <= 1}
+                                >
                                     Trước
                                 </button>
-                                <button className={`${cx('pageBtn')} ${cx('pageBtnActive')}`}>1</button>
-                                <button className={cx('pageBtn')}>2</button>
-                                <button className={cx('pageBtn')}>3</button>
-                                <button className={cx('pageBtn')}>Sau</button>
+                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                    let pageNum = currentPage <= 3 ? i + 1 : currentPage + i - 2;
+                                    if (pageNum > totalPages) pageNum = totalPages - (4 - i);
+                                    if (pageNum < 1) pageNum = 1;
+                                    return (
+                                        <button
+                                            key={pageNum}
+                                            onClick={() => handlePageChange(pageNum)}
+                                            className={`${cx('pageBtn')} ${currentPage === pageNum ? cx('pageBtnActive') : ''}`}
+                                        >
+                                            {pageNum}
+                                        </button>
+                                    );
+                                })}
+                                <button
+                                    className={cx('pageBtn')}
+                                    onClick={() => handlePageChange(currentPage + 1)}
+                                    disabled={currentPage >= totalPages}
+                                >
+                                    Sau
+                                </button>
                             </div>
                         </div>
                     </div>

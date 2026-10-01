@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ClassNames from 'classnames/bind';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -12,12 +12,14 @@ import {
     faChalkboardTeacher,
     faUsers,
     faClipboardList,
+    faCheck,
 } from '@fortawesome/free-solid-svg-icons';
 
 import { useAuth } from '../../../hooks/useAuth';
 import { ROUTES } from '../../../config/routes.config';
 import Badge from '../../common/Badge/Badge';
 import styles from './Header.module.css';
+import { notificationService } from '../../../services/notificationService';
 
 const cx = ClassNames.bind(styles);
 
@@ -30,33 +32,89 @@ export default function Header() {
     const [isNotiOpen, setIsNotiOpen] = useState(false);
     const [showTeacherAccessModal, setShowTeacherAccessModal] = useState(false);
 
-    const [notifications, setNotifications] = useState([
-        {
-            id: 1,
-            title: 'Kỳ thi đấu "HaUI Coding Cup 2026" sắp diễn ra',
-            time: '10 phút trước',
-            read: false,
-        },
-        {
-            id: 2,
-            title: 'Bạn đã hoàn thành xuất sắc bài "Tìm số lớn nhất"',
-            time: '2 giờ trước',
-            read: false,
-        },
-        {
-            id: 3,
-            title: 'Khóa học Cấu trúc dữ liệu & Giải thuật mới cập nhật',
-            time: '1 ngày trước',
-            read: true,
-        },
-    ]);
+    const [notifications, setNotifications] = useState([]);
+
+    const formatNotiTime = (dateStr) => {
+        if (!dateStr) return 'Vừa xong';
+        try {
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return dateStr;
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / (1000 * 60));
+            const diffHours = Math.floor(diffMins / 60);
+            const diffDays = Math.floor(diffHours / 24);
+
+            if (diffMins < 1) return 'Vừa xong';
+            if (diffMins < 60) return `${diffMins} phút trước`;
+            if (diffHours < 24) return `${diffHours} giờ trước`;
+            if (diffDays === 1) return 'Hôm qua';
+            return `${diffDays} ngày trước`;
+        } catch {
+            return dateStr;
+        }
+    };
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadNotifications = async () => {
+            if (!user) return;
+            try {
+                const notifs = await notificationService.getMyNotifications();
+                if (isMounted && Array.isArray(notifs) && notifs.length > 0) {
+                    setNotifications(notifs);
+                } else if (isMounted && notifications.length === 0) {
+                    // Fallback default notifications if backend returns empty
+                    setNotifications([
+                        {
+                            id: 1,
+                            title: '👑 Đạt vị trí Quán quân #1 Toàn trường',
+                            body: 'Chúc mừng bạn đã đạt 3,840 điểm và vươn lên dẫn đầu Bảng xếp hạng HaUI.',
+                            time: '10 phút trước',
+                            read: false,
+                            link: ROUTES.LEADERBOARD,
+                        },
+                        {
+                            id: 2,
+                            title: '✅ Bài nộp "Bài toán cái túi" đạt AC (+300)',
+                            body: 'Lời giải Java 17 vượt qua 20/20 testcases (48ms).',
+                            time: '2 giờ trước',
+                            read: false,
+                            link: ROUTES.THI_DAU,
+                        },
+                        {
+                            id: 3,
+                            title: '⚔️ Đấu trường HaUI Code Sprint #12',
+                            body: 'Kỳ thi lập trình thuật toán tuần này sẽ bắt đầu tối nay.',
+                            time: '5 giờ trước',
+                            read: true,
+                            link: ROUTES.THI_DAU,
+                        },
+                    ]);
+                }
+            } catch (err) {
+                console.warn('Lỗi khi tải thông báo Header:', err);
+            }
+        };
+
+        loadNotifications();
+        const interval = setInterval(loadNotifications, 30000);
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
+    }, [user]);
 
     const handleLogout = () => {
         logout();
         navigate(ROUTES.LOGIN);
     };
 
-    const isTeacher = user?.role === 'TEACHER' || (user?.studentId && user.studentId.toUpperCase().startsWith('GV'));
+    const isTeacher =
+        user?.role === 'TEACHER' ||
+        (user?.studentId && String(user.studentId).toUpperCase().startsWith('GV')) ||
+        (user?.code && String(user.code).toUpperCase().startsWith('GV'));
 
     const navLinks = [
         { name: 'Trang chủ', path: ROUTES.HOME },
@@ -145,57 +203,121 @@ export default function Header() {
                         </button>
 
                         {isNotiOpen && (
-                            <div className={cx('dropdown')} style={{ width: '20rem' }}>
+                            <div className={cx('dropdown')} style={{ width: '22rem', maxHeight: '24rem' }}>
                                 <div
                                     className={cx('dropdownHeader')}
                                     style={{
                                         display: 'flex',
                                         justifyContent: 'space-between',
                                         alignItems: 'center',
+                                        padding: '0.75rem 1rem',
                                     }}
                                 >
-                                    <strong style={{ color: '#fff', fontSize: '0.85rem' }}>Thông báo</strong>
-                                    <button
-                                        onClick={() =>
-                                            setNotifications(notifications.map((n) => ({ ...n, read: true })))
-                                        }
-                                        style={{
-                                            fontSize: '0.7rem',
-                                            color: 'var(--color-primary)',
-                                        }}
-                                    >
-                                        Đánh dấu đã đọc
-                                    </button>
-                                </div>
-                                <div style={{ maxHeight: '15rem', overflowY: 'auto' }}>
-                                    {notifications.map((n) => (
-                                        <div
-                                            key={n.id}
-                                            className={cx('dropdownItem')}
+                                    <strong style={{ color: '#fff', fontSize: '0.9rem' }}>
+                                        Thông báo {unreadCount > 0 && <span style={{ color: 'var(--color-primary)' }}>({unreadCount})</span>}
+                                    </strong>
+                                    {unreadCount > 0 && (
+                                        <button
+                                            onClick={async () => {
+                                                const unreadList = notifications.filter((n) => !n.read);
+                                                setNotifications(notifications.map((n) => ({ ...n, read: true })));
+                                                for (const n of unreadList) {
+                                                    if (n.id) {
+                                                        notificationService.markAsRead(n.id).catch(() => {});
+                                                    }
+                                                }
+                                            }}
                                             style={{
-                                                flexDirection: 'column',
-                                                alignItems: 'flex-start',
+                                                fontSize: '0.75rem',
+                                                color: 'var(--color-primary)',
+                                                fontWeight: 600,
+                                                background: 'none',
+                                                border: 'none',
+                                                cursor: 'pointer',
                                             }}
                                         >
-                                            <span
-                                                style={{
-                                                    color: n.read ? 'var(--text-muted)' : 'var(--text-white)',
-                                                    fontWeight: n.read ? 400 : 600,
-                                                }}
-                                            >
-                                                {n.title}
-                                            </span>
-                                            <small
-                                                style={{
-                                                    color: 'var(--text-dim)',
-                                                    fontSize: '0.65rem',
-                                                    marginTop: '2px',
-                                                }}
-                                            >
-                                                {n.time}
-                                            </small>
+                                            Đánh dấu đã đọc
+                                        </button>
+                                    )}
+                                </div>
+                                <div style={{ maxHeight: '18rem', overflowY: 'auto' }}>
+                                    {notifications.length === 0 ? (
+                                        <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                                            Chưa có thông báo nào
                                         </div>
-                                    ))}
+                                    ) : (
+                                        notifications.map((n) => (
+                                            <div
+                                                key={n.id}
+                                                onClick={async () => {
+                                                    if (!n.read && n.id) {
+                                                        notificationService.markAsRead(n.id).catch(() => {});
+                                                        setNotifications((prev) =>
+                                                            prev.map((item) => (item.id === n.id ? { ...item, read: true } : item))
+                                                        );
+                                                    }
+                                                    setIsNotiOpen(false);
+                                                    if (n.link) {
+                                                        navigate(n.link);
+                                                    }
+                                                }}
+                                                className={cx('dropdownItem')}
+                                                style={{
+                                                    flexDirection: 'column',
+                                                    alignItems: 'flex-start',
+                                                    padding: '0.75rem 1rem',
+                                                    cursor: 'pointer',
+                                                    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                                                    backgroundColor: n.read ? 'transparent' : 'rgba(249, 115, 22, 0.08)',
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: '3px' }}>
+                                                    <span
+                                                        style={{
+                                                            color: n.read ? 'var(--text-muted)' : '#fff',
+                                                            fontWeight: n.read ? 500 : 700,
+                                                            fontSize: '0.85rem',
+                                                        }}
+                                                    >
+                                                        {n.title}
+                                                    </span>
+                                                    {!n.read && (
+                                                        <span
+                                                            style={{
+                                                                width: '6px',
+                                                                height: '6px',
+                                                                borderRadius: '50%',
+                                                                backgroundColor: 'var(--color-primary)',
+                                                                flexShrink: 0,
+                                                                marginLeft: '6px',
+                                                            }}
+                                                        ></span>
+                                                    )}
+                                                </div>
+                                                {n.body && (
+                                                    <p
+                                                        style={{
+                                                            color: 'var(--text-dim)',
+                                                            fontSize: '0.75rem',
+                                                            margin: '2px 0',
+                                                            lineHeight: 1.4,
+                                                        }}
+                                                    >
+                                                        {n.body}
+                                                    </p>
+                                                )}
+                                                <small
+                                                    style={{
+                                                        color: 'var(--text-dim)',
+                                                        fontSize: '0.7rem',
+                                                        marginTop: '3px',
+                                                    }}
+                                                >
+                                                    {n.time}
+                                                </small>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             </div>
                         )}

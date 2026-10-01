@@ -548,7 +548,40 @@ INSERT IGNORE INTO `submissions` (`user_id`, `problem_id`, `source_code`, `langu
 
 (15, 1, 'public class Main { ... }', 'CPP', 'AC', 15, 8400, 100, DATE_SUB(NOW(), INTERVAL 7 DAY)),
 (15, 7, 'public class Main { ... }', 'CPP', 'AC', 19, 8700, 160, DATE_SUB(NOW(), INTERVAL 4 DAY)),
-(15, 9, 'public class Main { ... }', 'CPP', 'AC', 22, 9000, 250, DATE_SUB(NOW(), INTERVAL 1 DAY));
+(15, 9, 'public class Main { ... }', 'CPP', 'AC', 22, 9000, 250, DATE_SUB(NOW(), INTERVAL 1 DAY)),
+
+(18, 1, 'import java.util.*;\npublic class Solution { public static void main(String[] args){ Scanner sc=new Scanner(System.in); int n=sc.nextInt(), m=-1; while(n-->0) m=Math.max(m,sc.nextInt()); System.out.println(m); } }', 'JAVA', 'AC', 45, 16200, 100, DATE_SUB(NOW(), INTERVAL 5 DAY)),
+(18, 2, 'class Employee extends Person { private double salary; }', 'JAVA', 'AC', 52, 17800, 150, DATE_SUB(NOW(), INTERVAL 4 DAY)),
+(18, 3, 'import java.util.*;\npublic class Main { public static void main(String[] args) { } }', 'JAVA', 'AC', 39, 15100, 100, DATE_SUB(NOW(), INTERVAL 2 DAY)),
+(18, 4, 'public class Main { // Two Sum solution }', 'JAVA', 'WA', 60, 18500, 0, DATE_SUB(NOW(), INTERVAL 1 DAY)),
+(18, 4, 'public class Main { // Two Sum fixed }', 'JAVA', 'AC', 41, 15900, 100, NOW()),
+
+(19, 1, 'public class Main { ... }', 'JAVA', 'AC', 43, 16100, 100, DATE_SUB(NOW(), INTERVAL 6 DAY)),
+(19, 2, 'public class Main { ... }', 'JAVA', 'AC', 56, 18300, 150, DATE_SUB(NOW(), INTERVAL 3 DAY)),
+(20, 1, 'public class Main { ... }', 'CPP', 'AC', 18, 8600, 100, DATE_SUB(NOW(), INTERVAL 7 DAY)),
+(20, 3, 'public class Main { ... }', 'CPP', 'AC', 21, 8900, 100, DATE_SUB(NOW(), INTERVAL 2 DAY)),
+
+-- Thêm submissions cho sinh viên còn thiếu (đồng bộ với DB_SEEDED_SUBMISSIONS frontend)
+-- 9: Nguyễn Thị Thu Hà (2021607799)
+(9, 1, 'public class Main { ... }', 'JAVA', 'AC', 41, 15900, 100, DATE_SUB(NOW(), INTERVAL 4 DAY)),
+(9, 3, 'public class Main { ... }', 'JAVA', 'AC', 43, 16200, 100, DATE_SUB(NOW(), INTERVAL 2 DAY)),
+
+-- 12: Phan Thanh Tùng (2020603412)
+(12, 1, 'public class Main { ... }', 'JAVA', 'AC', 37, 15300, 100, DATE_SUB(NOW(), INTERVAL 9 DAY)),
+(12, 2, 'public class Main { ... }', 'JAVA', 'AC', 53, 18000, 150, DATE_SUB(NOW(), INTERVAL 7 DAY)),
+(12, 9, 'public class Main { ... }', 'JAVA', 'AC', 46, 16500, 250, DATE_SUB(NOW(), INTERVAL 4 DAY)),
+(12, 10, 'public class Main { ... }', 'JAVA', 'AC', 50, 17200, 300, DATE_SUB(NOW(), INTERVAL 1 DAY)),
+
+-- 13: Dương Thùy Linh (2020607823)
+(13, 1, 'public class Main { ... }', 'JAVA', 'AC', 40, 15700, 100, DATE_SUB(NOW(), INTERVAL 7 DAY)),
+(13, 3, 'public class Main { ... }', 'JAVA', 'AC', 44, 16100, 100, DATE_SUB(NOW(), INTERVAL 4 DAY)),
+
+-- 14: Lý Hoàng Nam (2020609145)
+(14, 1, 'public class Main { ... }', 'JAVA', 'AC', 46, 16000, 100, DATE_SUB(NOW(), INTERVAL 3 DAY)),
+
+-- 16: Vũ Mai Phương (2022603456)
+(16, 1, 'public class Main { ... }', 'JAVA', 'AC', 42, 15800, 100, DATE_SUB(NOW(), INTERVAL 5 DAY)),
+(16, 3, 'public class Main { ... }', 'JAVA', 'AC', 45, 16300, 100, DATE_SUB(NOW(), INTERVAL 2 DAY));
 
 -- 13. Nhật ký hoạt động hàng ngày
 INSERT INTO `user_daily_activity` (`user_id`, `activity_date`, `study_seconds`, `submissions_count`, `lessons_completed`) VALUES
@@ -574,6 +607,12 @@ INSERT INTO `user_daily_activity` (`user_id`, `activity_date`, `study_seconds`, 
 (4, DATE_SUB(CURDATE(), INTERVAL 1 DAY), 5100, 3, 1),
 (4, CURDATE(),                            2400, 1, 0),
 
+(18, DATE_SUB(CURDATE(), INTERVAL 5 DAY), 3600, 1, 1),
+(18, DATE_SUB(CURDATE(), INTERVAL 4 DAY), 5400, 1, 1),
+(18, DATE_SUB(CURDATE(), INTERVAL 2 DAY), 4200, 1, 0),
+(18, DATE_SUB(CURDATE(), INTERVAL 1 DAY), 3000, 1, 1),
+(18, CURDATE(),                            3600, 1, 1),
+
 (6, DATE_SUB(CURDATE(), INTERVAL 18 DAY), 1200, 1, 1),
 (6, DATE_SUB(CURDATE(), INTERVAL 17 DAY), 1800, 1, 0),
 
@@ -583,12 +622,24 @@ INSERT INTO `user_daily_activity` (`user_id`, `activity_date`, `study_seconds`, 
 ON DUPLICATE KEY UPDATE `study_seconds`=VALUES(`study_seconds`);
 
 -- 14. Thông báo mẫu
-INSERT INTO `notifications` (`user_id`, `type`, `title`, `body`, `link`, `is_read`) VALUES
-(5, 'SUBMISSION_RESULT', '✅ Bài nộp được chấp nhận!', 'Bài "Tìm số lớn nhất trong mảng" đạt kết quả AC (38ms).', '/problems/tim-so-lon-nhat', 0),
-(5, 'ACHIEVEMENT', '🏆 Lên hạng Master!', 'Chúc mừng bạn đã đạt 2000 điểm và vươn lên cấp bậc Master.', '/leaderboard', 0),
-(5, 'COURSE_UPDATE', '📚 Khóa học Spring Boot có bài mới', 'Giảng viên vừa thêm bài học "Xây dựng REST API & Security JWT".', '/khoa-hoc/lap-trinh-web-spring-boot', 0),
-(5, 'CONTEST_START', '⚔️ Cuộc thi tuần 39 sắp diễn ra', 'Cuộc thi lập trình thuật toán HaUI bắt đầu lúc 20h00 tối nay.', '/thi-dau', 1),
-(5, 'TEACHER_ALERT', '📢 Nhắc nhở nộp bài tập tuần', 'TS. Nguyễn Văn Hùng nhắc cả lớp hoàn thành bài tập OOP trước Chủ Nhật.', '/teacher/problems', 1),
+INSERT INTO `notifications` (`user_id`, `type`, `title`, `body`, `link`, `is_read`, `created_at`) VALUES
+(3, 'ACHIEVEMENT', '👑 Đạt vị trí Quán quân #1 Toàn trường', 'Chúc mừng bạn đã đạt 3,840 điểm và vươn lên vị trí dẫn đầu Bảng xếp hạng HaUI.', '/leaderboard', 0, NOW()),
+(3, 'SUBMISSION_RESULT', '✅ Bài nộp Bài toán cái túi đạt AC!', 'Lời giải Java 17 vượt qua 20/20 testcases (48ms, RAM: 17.5MB) nhận +300 điểm.', '/thi-dau', 0, DATE_SUB(NOW(), INTERVAL 2 HOUR)),
+(3, 'CONTEST_START', '⚔️ Đấu trường HaUI Code Sprint #12', 'Kỳ thi lập trình thuật toán tuần này sẽ bắt đầu lúc 20h00 tối nay. Chuẩn bị tham gia!', '/thi-dau', 0, DATE_SUB(NOW(), INTERVAL 5 HOUR)),
+(3, 'COURSE_UPDATE', '📚 Khóa học Lập trình Web Fullstack có bài mới', 'Giảng viên vừa cập nhật video bài học Tích hợp Spring Security & JWT.', '/khoa-hoc', 1, DATE_SUB(NOW(), INTERVAL 1 DAY)),
+(3, 'TEACHER_ALERT', '📢 Thông báo từ TS. Nguyễn Văn Hùng', 'Nhắc nhở lớp KTPM16A hoàn thành đồ án môn học trước ngày 15/10.', '/profile', 1, DATE_SUB(NOW(), INTERVAL 2 DAY)),
 
-(3, 'ACHIEVEMENT', '👑 Đạt danh hiệu Grandmaster!', 'Bạn đã lọt vào Top 1 sinh viên xuất sắc nhất khoa CNTT.', '/leaderboard', 0),
-(6, 'TEACHER_ALERT', '⚠️ Cảnh báo tiến độ học tập', 'Bạn đã vắng mặt hơn 2 tuần. Vui lòng liên hệ Giảng viên bộ môn.', '/home', 0);
+(1, 'SUBMISSION_RESULT', '📥 15 sinh viên vừa nộp bài tập mới', 'Lớp DHKTPM16A có 15 sinh viên vừa nộp bài Quản lý Nhân viên kế thừa OOP.', '/teacher/students', 0, NOW()),
+(1, 'ACHIEVEMENT', '🌟 96.5% sinh viên đạt tiến độ học tập', 'Báo cáo tuần: 4 lớp học phần duy trì tiến độ làm bài tập xuất sắc.', '/teacher/dashboard', 0, DATE_SUB(NOW(), INTERVAL 3 HOUR)),
+(1, 'SYSTEM', '🛡️ Máy chủ chấm code Sandbox nâng cấp', 'Hệ thống đã hỗ trợ Java 21, C++ 23 và Python 3.12 tự động.', '/teacher/dashboard', 1, DATE_SUB(NOW(), INTERVAL 1 DAY)),
+
+(4, 'ACHIEVEMENT', '🥈 Xuất sắc đạt vị trí Top #2 Bảng xếp hạng', 'Chúc mừng bạn đã đạt 3,410 điểm và giữ vững Top 2 sinh viên HaUI.', '/leaderboard', 0, NOW()),
+(4, 'SUBMISSION_RESULT', '✅ Bài nộp LIS Dãy con tăng dài nhất AC!', 'Lời giải C++ 20 tối ưu thành công với 20ms (+250 điểm).', '/thi-dau', 0, DATE_SUB(NOW(), INTERVAL 4 HOUR)),
+
+(5, 'SUBMISSION_RESULT', '✅ Bài nộp được chấp nhận!', 'Bài "Tìm số lớn nhất trong mảng" đạt kết quả AC (38ms).', '/thi-dau', 0, NOW()),
+(5, 'ACHIEVEMENT', '🏆 Lên hạng Master!', 'Chúc mừng bạn đã đạt 2000 điểm và vươn lên cấp bậc Master.', '/leaderboard', 0, DATE_SUB(NOW(), INTERVAL 1 DAY)),
+(5, 'COURSE_UPDATE', '📚 Khóa học Spring Boot có bài mới', 'Giảng viên vừa thêm bài học "Xây dựng REST API & Security JWT".', '/khoa-hoc', 0, DATE_SUB(NOW(), INTERVAL 2 DAY)),
+(5, 'CONTEST_START', '⚔️ Cuộc thi tuần 39 sắp diễn ra', 'Cuộc thi lập trình thuật toán HaUI bắt đầu lúc 20h00 tối nay.', '/thi-dau', 1, DATE_SUB(NOW(), INTERVAL 3 DAY)),
+(5, 'TEACHER_ALERT', '📢 Nhắc nhở nộp bài tập tuần', 'TS. Nguyễn Văn Hùng nhắc cả lớp hoàn thành bài tập OOP trước Chủ Nhật.', '/profile', 1, DATE_SUB(NOW(), INTERVAL 4 DAY)),
+
+(6, 'TEACHER_ALERT', '⚠️ Cảnh báo tiến độ học tập', 'Bạn đã vắng mặt hơn 2 tuần. Vui lòng liên hệ Giảng viên bộ môn.', '/home', 0, NOW());

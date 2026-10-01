@@ -42,6 +42,15 @@ public class SubmissionController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
+    @GetMapping("/user/{userId}")
+    @Operation(summary = "Lấy lịch sử nộp bài của một sinh viên theo ID (Dành cho Giảng viên / Quản trị viên)")
+    public ResponseEntity<ApiResponse<List<SubmissionDto>>> getUserSubmissions(
+            @PathVariable Long userId
+    ) {
+        List<SubmissionDto> response = submissionService.getUserSubmissions(userId);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
     @GetMapping("/problem/{problemId}")
     @Operation(summary = "Lấy lịch sử nộp bài của một bài tập cụ thể")
     public ResponseEntity<ApiResponse<List<SubmissionDto>>> getProblemSubmissions(

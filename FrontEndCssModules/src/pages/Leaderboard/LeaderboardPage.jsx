@@ -11,6 +11,7 @@ import {
     faMedal,
     faCrosshairs,
     faCircle,
+    faChalkboardTeacher,
 } from '@fortawesome/free-solid-svg-icons';
 
 // chỉnh lại path cho đúng vị trí file thật
@@ -19,6 +20,7 @@ import Badge from '../../components/common/Badge/Badge';
 import Button from '../../components/common/Button/Button';
 import styles from './LeaderboardPage.module.css';
 import { leaderboardService, mapApiStudent } from '../../services/leaderboardService';
+import { useAuthContext } from '../../context/AuthContext';
 
 const cx = ClassNames.bind(styles);
 
@@ -30,16 +32,22 @@ export default function LeaderboardPage() {
     const [rawStudents, setRawStudents] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const { user } = useAuthContext();
+
+    const isTeacher =
+        user?.role === 'TEACHER' ||
+        (user?.studentId && String(user.studentId).toUpperCase().startsWith('GV')) ||
+        (user?.code && String(user.code).toUpperCase().startsWith('GV'));
 
     const rawStudentsDefault = [
         {
             rank: 1,
             name: 'Trần Văn Mạnh',
             id: '2020601111',
-            class: 'DHKTPM15',
+            class: 'DHKTPM16A',
             faculty: 'Khoa CNTT',
-            solved: 142,
-            acRate: 95.8,
+            solved: 5,
+            acRate: 100.0,
             points: 3840,
             badge: 'Grandmaster',
             badgeColor: 'orange',
@@ -47,157 +55,122 @@ export default function LeaderboardPage() {
         },
         {
             rank: 2,
-            name: 'Hoàng Nhật Minh',
-            id: '2021602345',
-            class: 'DHKTPM16',
-            faculty: 'Khoa CNTT',
-            solved: 135,
-            acRate: 92.4,
-            points: 3620,
-            badge: 'Master',
-            badgeColor: 'purple',
-            avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&auto=format&fit=crop&q=80',
-        },
-        {
-            rank: 3,
             name: 'Lê Quỳnh Trang',
             id: '2022604567',
-            class: 'DHKHMT17',
+            class: 'DHKTPM16A',
             faculty: 'Khoa CNTT',
-            solved: 128,
-            acRate: 91.0,
+            solved: 5,
+            acRate: 83.3,
             points: 3410,
             badge: 'Master',
             badgeColor: 'purple',
             avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80',
         },
         {
-            rank: 4,
-            name: 'Nguyễn Văn An (Bạn)',
-            id: '2021600123',
-            class: 'DHKTPM16A',
+            rank: 3,
+            name: 'Trịnh Gia Bảo',
+            id: '2022601999',
+            class: 'DHKHMT17',
             faculty: 'Khoa CNTT',
-            solved: 48,
-            acRate: 88.5,
-            points: 1250,
-            badge: 'Expert',
-            badgeColor: 'blue',
-            isMe: true,
-            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+            solved: 3,
+            acRate: 100.0,
+            points: 2980,
+            badge: 'Master',
+            badgeColor: 'purple',
+            avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&auto=format&fit=crop&q=80',
         },
         {
-            rank: 5,
-            name: 'Phạm Minh Đức',
-            id: '2021607890',
-            class: 'DHTH16',
+            rank: 4,
+            name: 'Phan Thanh Tùng',
+            id: '2020603412',
+            class: 'DHTH15',
             faculty: 'Khoa CNTT',
-            solved: 45,
-            acRate: 86.2,
-            points: 1190,
-            badge: 'Expert',
-            badgeColor: 'blue',
+            solved: 4,
+            acRate: 100.0,
+            points: 2650,
+            badge: 'Master',
+            badgeColor: 'purple',
             avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
         },
         {
+            rank: 5,
+            name: 'Tạ Minh Quang',
+            id: '2021604477',
+            class: 'DHATTT16',
+            faculty: 'Khoa An toàn Thông tin',
+            solved: 2,
+            acRate: 100.0,
+            points: 2200,
+            badge: 'Master',
+            badgeColor: 'purple',
+            avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
+        },
+        {
             rank: 6,
-            name: 'Vũ Thị Thanh Hằng',
-            id: '2022603344',
-            class: 'DHKTPM17B',
+            name: 'Nguyễn Văn An',
+            id: '2021600123',
+            class: 'DHKTPM16A',
             faculty: 'Khoa CNTT',
-            solved: 41,
-            acRate: 84.0,
-            points: 1080,
+            solved: 5,
+            acRate: 83.3,
+            points: 2150,
+            badge: 'Master',
+            badgeColor: 'purple',
+            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+        },
+        {
+            rank: 7,
+            name: 'Phạm Đức Long',
+            id: '2021603344',
+            class: 'DHKTPM16B',
+            faculty: 'Khoa CNTT',
+            solved: 2,
+            acRate: 100.0,
+            points: 1890,
+            badge: 'Expert',
+            badgeColor: 'blue',
+            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80',
+        },
+        {
+            rank: 8,
+            name: 'Dương Thùy Linh',
+            id: '2020607823',
+            class: 'DHTH15',
+            faculty: 'Khoa CNTT',
+            solved: 2,
+            acRate: 100.0,
+            points: 1780,
             badge: 'Expert',
             badgeColor: 'blue',
             avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&auto=format&fit=crop&q=80',
         },
         {
-            rank: 7,
-            name: 'Đỗ Quốc Bảo',
-            id: '2021605566',
-            class: 'DHEE16',
-            faculty: 'Khoa Điện tử',
-            solved: 39,
-            acRate: 82.5,
-            points: 990,
-            badge: 'Candidate Master',
-            badgeColor: 'purple',
-            avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
-        },
-        {
-            rank: 8,
-            name: 'Ngô Đức Thắng',
-            id: '2023608899',
-            class: 'DHKTPM18A',
-            faculty: 'Khoa CNTT',
-            solved: 35,
-            acRate: 79.8,
-            points: 920,
-            badge: 'Specialist',
-            badgeColor: 'green',
-            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80',
-        },
-        {
             rank: 9,
-            name: 'Phan Bảo Ngọc',
-            id: '2022609911',
-            class: 'DHAUTO17',
-            faculty: 'Khoa Cơ khí',
-            solved: 32,
-            acRate: 76.5,
-            points: 850,
-            badge: 'Specialist',
-            badgeColor: 'green',
-            avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80',
+            name: 'Hoàng Minh Tuấn',
+            id: '2021602288',
+            class: 'DHKTPM16A',
+            faculty: 'Khoa CNTT',
+            solved: 2,
+            acRate: 100.0,
+            points: 1620,
+            badge: 'Expert',
+            badgeColor: 'blue',
+            avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&auto=format&fit=crop&q=80',
         },
         {
             rank: 10,
-            name: 'Bùi Gia Khiêm',
-            id: '2023601245',
-            class: 'DHKHMT18',
+            name: 'Nguyễn Thị Thu Hà',
+            id: '2021607799',
+            class: 'DHKTPM16B',
             faculty: 'Khoa CNTT',
-            solved: 29,
-            acRate: 74.0,
-            points: 790,
-            badge: 'Specialist',
-            badgeColor: 'green',
-            avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&auto=format&fit=crop&q=80',
+            solved: 2,
+            acRate: 100.0,
+            points: 1450,
+            badge: 'Expert',
+            badgeColor: 'blue',
+            avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80',
         },
     ];
-
-    // Map rankTitle -> màu badge hiển thị
-    const mapBadgeColor = (rankTitle) => {
-        switch (rankTitle) {
-            case 'Grandmaster':
-                return 'orange';
-            case 'Master':
-                return 'purple';
-            case 'Candidate Master':
-                return 'purple';
-            case 'Expert':
-                return 'blue';
-            case 'Specialist':
-                return 'green';
-            default:
-                return 'slate';
-        }
-    };
-
-    // Chuyển đổi 1 record trả về từ API sang đúng shape mà UI đang cần.
-    // const mapApiStudent = (item, index) => ({
-    //     rank: index + 1, // API chưa trả field rank -> giả định mảng đã sort theo totalPoints giảm dần
-    //     name: item.fullName,
-    //     id: item.code,
-    //     class: item.classId,
-    //     faculty: item.department || item.className, // "department" hiện null, tạm dùng className thay thế
-    //     solved: item.solvedCount ?? 0, // API hiện chưa có field này, cần backend bổ sung để hiển thị đúng
-    //     acRate: item.acRate ?? 0, // tương tự, tạm mặc định 0
-    //     points: item.totalPoints ?? 0,
-    //     badge: item.rankTitle ?? 'Newbie',
-    //     badgeColor: mapBadgeColor(item.rankTitle),
-    //     avatar: item.avatarUrl,
-    //     isMe: false, // cần so sánh item.code với mã số của user đang đăng nhập (lấy từ auth context/localStorage)
-    // });
 
     useEffect(() => {
         let isMounted = true;
@@ -206,26 +179,36 @@ export default function LeaderboardPage() {
                 setIsLoading(true);
                 setError(null);
                 const response = await leaderboardService.getTop10Solvers();
-                if (isMounted && Array.isArray(response) && response.length > 0) {
-                    setRawStudents(response.map(mapApiStudent));
+                if (!isMounted) return;
+                if (Array.isArray(response) && response.length > 0) {
+                    const mapped = response.map((item, idx) => ({
+                        ...mapApiStudent(item, idx),
+                        isMe: !isTeacher && (user?.studentId === item.code || user?.code === item.code),
+                    }));
+                    setRawStudents(mapped);
+                } else {
+                    setRawStudents(rawStudentsDefault.map((item) => ({
+                        ...item,
+                        isMe: !isTeacher && (user?.studentId === item.id || user?.code === item.id),
+                    })));
                 }
             } catch (err) {
                 console.warn('Lấy leaderboard từ backend thất bại:', err);
                 if (isMounted) {
-                    setError('Không tải được bảng xếp hạng. Vui lòng thử lại sau.');
-                    // Fallback về danh sách mặc định khi backend lỗi
-                    setRawStudents((prev) => (prev.length > 0 ? prev : rawStudentsDefault));
+                    setRawStudents(rawStudentsDefault.map((item) => ({
+                        ...item,
+                        isMe: !isTeacher && (user?.studentId === item.id || user?.code === item.id),
+                    })));
                 }
             } finally {
                 if (isMounted) setIsLoading(false);
             }
         };
-
         fetchLeaderboard();
         return () => {
             isMounted = false;
         };
-    }, []);
+    }, [user]);
 
     // useEffect(() => {
     //     let isMounted = true;
@@ -275,6 +258,20 @@ export default function LeaderboardPage() {
     const top2 = rawStudents[1];
     const top3 = rawStudents[2];
     const hasPodium = Boolean(top1 && top2 && top3);
+
+    const myStudent = isTeacher
+        ? null
+        : rawStudents.find((st) => st.isMe || st.id === user?.code || st.id === user?.studentId) ||
+          rawStudents.find((st) => user?.fullName && st.name.toLowerCase().includes(user.fullName.toLowerCase())) ||
+          rawStudents[0] ||
+          { rank: 1, name: 'Trần Văn Mạnh', id: '2020601111', points: 3840, solved: 5 };
+
+    const myRank = myStudent?.rank || 1;
+    const myPoints = myStudent?.points || 0;
+    const mySolved = myStudent?.solved || 0;
+
+    const pointsToTop3 = top3 ? Math.max(10, top3.points - myPoints + 10) : 100;
+    const pointsToTop1 = top1 ? Math.max(10, top1.points - myPoints + 10) : 100;
 
     if (isLoading) {
         return (
@@ -344,13 +341,6 @@ export default function LeaderboardPage() {
                 </div>
 
                 <div className={cx('searchAndSelect')}>
-                    {/* <input
-                        type="text"
-                        placeholder="Tìm theo tên, MSSV, lớp..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className={cx('filterInput')}
-                    /> */}
                     <select
                         value={department}
                         onChange={(e) => setDepartment(e.target.value)}
@@ -606,31 +596,68 @@ export default function LeaderboardPage() {
                 </div>
             </div>
 
-            {/* Your Rank Highlight Banner */}
-            <div className={cx('myRankBanner')}>
-                <div className={cx('myRankLeft')}>
-                    <div className={cx('myRankIcon')}>
-                        <FontAwesomeIcon
-                            icon={faCrosshairs}
-                            style={{ fontSize: '2.25rem', color: 'var(--color-haui-blue)' }}
-                        />
-                    </div>
-                    <div>
-                        <div className={cx('myRankTitle')}>
-                            Vị trí của bạn: <strong>Hạng #4 toàn trường</strong> (1,250 pts • 48 bài AC)
+            {/* Your Rank Highlight Banner / Teacher Info Banner */}
+            {isTeacher ? (
+                <div className={cx('myRankBanner')}>
+                    <div className={cx('myRankLeft')}>
+                        <div className={cx('myRankIcon')}>
+                            <FontAwesomeIcon
+                                icon={faChalkboardTeacher}
+                                style={{ fontSize: '2.25rem', color: 'var(--color-primary)' }}
+                            />
                         </div>
-                        <div className={cx('myRankDesc')}>
-                            Bạn chỉ cần thêm <strong style={{ color: 'var(--color-primary)' }}>160 điểm</strong> nữa để
-                            vượt qua hạng 3 và lọt vào Top Podium!
+                        <div>
+                            <div className={cx('myRankTitle')}>
+                                Bạn đang xem bảng xếp hạng với tư cách <strong>Giảng viên ({user?.fullName || 'Thầy/Cô'})</strong>
+                            </div>
+                            <div className={cx('myRankDesc')}>
+                                Theo dõi, đánh giá kết quả thi đua thuật toán và thống kê chi tiết tiến độ sinh viên các lớp học phần.
+                            </div>
                         </div>
                     </div>
+                    <Link to={ROUTES.TEACHER_DASHBOARD}>
+                        <Button variant="primary" size="md">
+                            Quản lý Giảng dạy
+                        </Button>
+                    </Link>
                 </div>
-                <Link to={ROUTES.THI_DAU}>
-                    <Button variant="primary" size="md">
-                        Luyện tập kiếm điểm ngay
-                    </Button>
-                </Link>
-            </div>
+            ) : (
+                <div className={cx('myRankBanner')}>
+                    <div className={cx('myRankLeft')}>
+                        <div className={cx('myRankIcon')}>
+                            <FontAwesomeIcon
+                                icon={faCrosshairs}
+                                style={{ fontSize: '2.25rem', color: 'var(--color-haui-blue)' }}
+                            />
+                        </div>
+                        <div>
+                            <div className={cx('myRankTitle')}>
+                                Vị trí của bạn: <strong>Hạng #{myRank} toàn trường</strong> ({myPoints.toLocaleString()} pts • {mySolved} bài AC)
+                            </div>
+                            <div className={cx('myRankDesc')}>
+                                {myRank === 1 ? (
+                                    <>
+                                        🎉 Bạn đang <strong style={{ color: 'var(--color-primary)' }}>dẫn đầu</strong> Bảng xếp hạng HaUI! Hãy tiếp tục duy trì phong độ xuất sắc.
+                                    </>
+                                ) : myRank <= 3 ? (
+                                    <>
+                                        🏆 Bạn đang trong <strong style={{ color: 'var(--color-primary)' }}>Top 3 Podium</strong>! Cần thêm <strong style={{ color: 'var(--color-primary)' }}>{pointsToTop1.toLocaleString()} điểm</strong> nữa để vươn lên vị trí Quán quân #1.
+                                    </>
+                                ) : (
+                                    <>
+                                        Bạn chỉ cần thêm <strong style={{ color: 'var(--color-primary)' }}>{pointsToTop3.toLocaleString()} điểm</strong> nữa để vượt qua hạng 3 và lọt vào Top Podium!
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                    <Link to={ROUTES.THI_DAU}>
+                        <Button variant="primary" size="md">
+                            Luyện tập kiếm điểm ngay
+                        </Button>
+                    </Link>
+                </div>
+            )}
         </div>
     );
 }

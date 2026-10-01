@@ -23,6 +23,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final ClassRepository classRepository;
+    private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -46,7 +47,7 @@ public class AuthService {
         return AuthResponse.builder()
                 .accessToken(token)
                 .tokenType("Bearer")
-                .user(UserDto.fromEntity(user))
+                .user(userService.getUserById(user.getId()))
                 .build();
     }
 
@@ -95,6 +96,6 @@ public class AuthService {
     public UserDto getCurrentUser(String code) {
         User user = userRepository.findByCode(code)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        return UserDto.fromEntity(user);
+        return userService.getUserById(user.getId());
     }
 }

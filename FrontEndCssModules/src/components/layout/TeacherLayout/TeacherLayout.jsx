@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ClassNames from 'classnames/bind';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -16,6 +16,7 @@ import {
 
 import { useAuth } from '../../../hooks/useAuth';
 import styles from './TeacherLayout.module.css';
+import { notificationService } from '../../../services/notificationService';
 
 const cx = ClassNames.bind(styles);
 
@@ -41,11 +42,94 @@ export default function TeacherLayout() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [isNotiOpen, setIsNotiOpen] = useState(false);
+    const [notifications, setNotifications] = useState([]);
+
+    const formatNotiTime = (dateStr) => {
+        if (!dateStr) return 'Vừa xong';
+        try {
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return dateStr;
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / (1000 * 60));
+            const diffHours = Math.floor(diffMins / 60);
+            const diffDays = Math.floor(diffHours / 24);
+
+            if (diffMins < 1) return 'Vừa xong';
+            if (diffMins < 60) return `${diffMins} phút trước`;
+            if (diffHours < 24) return `${diffHours} giờ trước`;
+            if (diffDays === 1) return 'Hôm qua';
+            return `${diffDays} ngày trước`;
+        } catch {
+            return dateStr;
+        }
+    };
+
+    useEffect(() => {
+        let isMounted = true;
+        const loadNotifications = async () => {
+            if (!user) return;
+            try {
+                const notifs = await notificationService.getMyNotifications();
+                if (isMounted && Array.isArray(notifs) && notifs.length > 0) {
+                    setNotifications(
+                        notifs.map((n) => ({
+                            id: n.id,
+                            title: n.title,
+                            body: n.body,
+                            time: formatNotiTime(n.createdAt),
+                            read: n.isRead,
+                            link: n.link,
+                        }))
+                    );
+                } else if (isMounted && notifications.length === 0) {
+                    setNotifications([
+                        {
+                            id: 1,
+                            title: '📥 15 sinh viên vừa nộp bài tập mới',
+                            body: 'Lớp DHKTPM16A có 15 sinh viên vừa nộp bài Quản lý Nhân viên OOP.',
+                            time: '10 phút trước',
+                            read: false,
+                            link: '/teacher/students',
+                        },
+                        {
+                            id: 2,
+                            title: '🌟 96.5% sinh viên đạt tiến độ học tập',
+                            body: 'Báo cáo tuần: 4 lớp học phần duy trì tiến độ làm bài xuất sắc.',
+                            time: '3 giờ trước',
+                            read: false,
+                            link: '/teacher/analytics',
+                        },
+                        {
+                            id: 3,
+                            title: '🛡️ Máy chủ chấm code Sandbox nâng cấp',
+                            body: 'Hệ thống đã hỗ trợ Java 21, C++ 23 và Python 3.12 tự động.',
+                            time: '1 ngày trước',
+                            read: true,
+                            link: '/teacher/dashboard',
+                        },
+                    ]);
+                }
+            } catch (err) {
+                console.warn('Lỗi khi tải thông báo TeacherLayout:', err);
+            }
+        };
+
+        loadNotifications();
+        const interval = setInterval(loadNotifications, 30000);
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
+    }, [user]);
 
     const handleLogout = () => {
         logout();
         navigate('/login');
     };
+
+    const unreadCount = notifications.filter((n) => !n.read).length;
 
     return (
         <div className={cx('portal')}>
@@ -64,10 +148,121 @@ export default function TeacherLayout() {
                 </div>
 
                 <div className={cx('topBarRight')}>
-                    <button className={cx('bellBtn')} title="Thông báo hệ thống">
-                        <FontAwesomeIcon icon={faBell} />
-                        <span className={cx('bellDot')} />
-                    </button>
+                    <div style={{ position: 'relative' }}>
+                        <button
+                            className={cx('bellBtn')}
+                            title="Thông báo hệ thống"
+                            onClick={() => {
+                                setIsNotiOpen(!isNotiOpen);
+                                setIsProfileOpen(false);
+                            }}
+                        >
+                            <FontAwesomeIcon icon={faBell} />
+                            {unreadCount > 0 && <span className={cx('bellDot')} />}
+                        </button>
+
+                        {isNotiOpen && (
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    top: 'calc(100% + 0.5rem)',
+                                    right: 0,
+                                    width: '22rem',
+                                    maxHeight: '24rem',
+                                    backgroundColor: '#1e293b',
+                                    border: '1px solid #334155',
+                                    borderRadius: '0.75rem',
+                                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+                                    zIndex: 100,
+                                    overflow: 'hidden',
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        padding: '0.75rem 1rem',
+                                        borderBottom: '1px solid #334155',
+                                    }}
+                                >
+                                    <strong style={{ color: '#fff', fontSize: '0.9rem' }}>
+                                        Thông báo Giảng viên {unreadCount > 0 && <span style={{ color: '#f97316' }}>({unreadCount})</span>}
+                                    </strong>
+                                    {unreadCount > 0 && (
+                                        <button
+                                            onClick={() => {
+                                                const unreadList = notifications.filter((n) => !n.read);
+                                                setNotifications(notifications.map((n) => ({ ...n, read: true })));
+                                                unreadList.forEach((n) => {
+                                                    if (n.id) notificationService.markAsRead(n.id).catch(() => {});
+                                                });
+                                            }}
+                                            style={{
+                                                fontSize: '0.75rem',
+                                                color: '#f97316',
+                                                fontWeight: 600,
+                                                background: 'none',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                            }}
+                                        >
+                                            Đánh dấu đã đọc
+                                        </button>
+                                    )}
+                                </div>
+                                <div style={{ maxHeight: '18rem', overflowY: 'auto' }}>
+                                    {notifications.length === 0 ? (
+                                        <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
+                                            Chưa có thông báo nào
+                                        </div>
+                                    ) : (
+                                        notifications.map((n) => (
+                                            <div
+                                                key={n.id}
+                                                onClick={() => {
+                                                    if (!n.read && n.id) {
+                                                        notificationService.markAsRead(n.id).catch(() => {});
+                                                        setNotifications((prev) =>
+                                                            prev.map((item) => (item.id === n.id ? { ...item, read: true } : item))
+                                                        );
+                                                    }
+                                                    setIsNotiOpen(false);
+                                                    if (n.link) navigate(n.link);
+                                                }}
+                                                style={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    padding: '0.75rem 1rem',
+                                                    cursor: 'pointer',
+                                                    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                                                    backgroundColor: n.read ? 'transparent' : 'rgba(249, 115, 22, 0.08)',
+                                                    transition: 'background-color 0.2s',
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: '2px' }}>
+                                                    <span style={{ color: n.read ? '#cbd5e1' : '#fff', fontWeight: n.read ? 500 : 700, fontSize: '0.85rem' }}>
+                                                        {n.title}
+                                                    </span>
+                                                    {!n.read && (
+                                                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#f97316', flexShrink: 0, marginLeft: '6px' }} />
+                                                    )}
+                                                </div>
+                                                {n.body && (
+                                                    <p style={{ color: '#94a3b8', fontSize: '0.75rem', margin: '2px 0', lineHeight: 1.4 }}>
+                                                        {n.body}
+                                                    </p>
+                                                )}
+                                                <small style={{ color: '#64748b', fontSize: '0.7rem', marginTop: '3px' }}>
+                                                    {n.time}
+                                                </small>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
 
                     <div style={{ position: 'relative' }}>
                         <button className={cx('profileBtn')} onClick={() => setIsProfileOpen(!isProfileOpen)}>

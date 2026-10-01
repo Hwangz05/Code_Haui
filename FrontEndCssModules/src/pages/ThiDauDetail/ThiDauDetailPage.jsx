@@ -15,6 +15,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { faCircleDot, faLightbulb } from '@fortawesome/free-regular-svg-icons';
 import { ROUTES } from '../../config/routes.config';
+import { problemService } from '../../services/problemService';
+import { translateLeetCodeHtml, translateTextToVietnamese } from '../../services/translateService';
 import Badge from '../../components/common/Badge/Badge';
 import Button from '../../components/common/Button/Button';
 import styles from './ThiDauDetailPage.module.css';
@@ -31,6 +33,12 @@ export default function ThiDauDetailPage() {
     const [terminalOutput, setTerminalOutput] = useState(null);
     const [isRunning, setIsRunning] = useState(false);
     const [customInput, setCustomInput] = useState('5\n10 45 2 99 30');
+    const [hauiProblemData, setHauiProblemData] = useState(null);
+    const [apiProblemData, setApiProblemData] = useState(null);
+    const [loadingApiDetail, setLoadingApiDetail] = useState(false);
+    const [viewLang, setViewLang] = useState('vi'); // 'vi' (mặc định Tiếng Việt) hoặc 'en'
+    const [translatedContent, setTranslatedContent] = useState(null);
+    const [isTranslating, setIsTranslating] = useState(false);
 
     // Resizable Split Panes State (LeetCode Style)
     const [leftWidth, setLeftWidth] = useState(45);
@@ -112,14 +120,113 @@ export default function ThiDauDetailPage() {
         },
     };
 
-    const currentProb = problemsDatabase[slug] || problemsDatabase['tim-so-lon-nhat'];
+    // Tự động gọi API lấy chi tiết bài toán HaUI Backend hoặc LeetCode nếu không có trong DB cục bộ
+    useEffect(() => {
+        let isMounted = true;
+        if (!problemsDatabase[slug] && slug) {
+            setLoadingApiDetail(true);
+            setHauiProblemData(null);
+            setApiProblemData(null);
+
+            // 1. Thử gọi backend HaUI trước
+            problemService
+                .getProblemBySlug(slug)
+                .then((hauiProb) => {
+                    if (isMounted && hauiProb) {
+                        setHauiProblemData(hauiProb);
+                        setLoadingApiDetail(false);
+                    } else {
+                        // 2. Nếu không phải bài HaUI, gọi LeetCode API
+                        return problemService.getLeetCodeProblemDetail(slug).then((data) => {
+                            if (isMounted && data) {
+                                setApiProblemData(data);
+                            }
+                        });
+                    }
+                })
+                .catch((err) => console.warn('Lỗi tải chi tiết bài tập:', err))
+                .finally(() => {
+                    if (isMounted) setLoadingApiDetail(false);
+                });
+        } else {
+            setHauiProblemData(null);
+            setApiProblemData(null);
+        }
+
+        return () => {
+            isMounted = false;
+        };
+    }, [slug]);
+
+    // Tự động dịch nội dung đề bài LeetCode sang Tiếng Việt khi tải xong
+    useEffect(() => {
+        let isMounted = true;
+        if (apiProblemData?.content) {
+            setIsTranslating(true);
+            translateLeetCodeHtml(apiProblemData.content, slug)
+                .then((translated) => {
+                    if (isMounted && translated) {
+                        setTranslatedContent(translated);
+                    }
+                })
+                .catch((err) => console.warn('Lỗi dịch HTML:', err))
+                .finally(() => {
+                    if (isMounted) setIsTranslating(false);
+                });
+        } else {
+            setTranslatedContent(null);
+        }
+
+        return () => {
+            isMounted = false;
+        };
+    }, [apiProblemData]);
+
+    const formattedTitle = slug
+        ? slug
+              .split('-')
+              .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+              .join(' ')
+        : 'Thử thách lập trình';
+
+    const defaultLeetProb = {
+        id: apiProblemData?.questionFrontendId || slug,
+        title: apiProblemData?.title || formattedTitle,
+        category: apiProblemData?.topicTags?.[0]?.name || 'Thuật toán LeetCode',
+        difficulty: apiProblemData?.difficulty === 'Easy' ? 'Dễ' : apiProblemData?.difficulty === 'Medium' ? 'Trung bình' : 'Khó',
+        diffVariant: apiProblemData?.difficulty === 'Easy' ? 'green' : apiProblemData?.difficulty === 'Medium' ? 'yellow' : 'red',
+        points: apiProblemData?.difficulty === 'Easy' ? 100 : apiProblemData?.difficulty === 'Medium' ? 250 : 500,
+        content: apiProblemData?.content,
+        statement: `Bài toán thuật toán: ${apiProblemData?.title || formattedTitle}. Hãy phân tích độ phức tạp thời gian/không gian và viết chương trình tối ưu bên dưới.`,
+        inputSpec: 'Dữ liệu đầu vào chuẩn theo mô tả bài toán trên LeetCode.',
+        outputSpec: 'Kết quả đầu ra tương ứng theo yêu cầu của bài toán.',
+        ex1: {
+            input: 'nums = [2, 7, 11, 15], target = 9',
+            output: '[0, 1]',
+            note: 'nums[0] + nums[1] = 2 + 7 = 9 -> Trả về [0, 1]',
+        },
+        timeLimit: '1.0 giây',
+        memLimit: '256 MB',
+        hints: 'Khuyến nghị sử dụng cấu trúc dữ liệu HashMap hoặc kỹ thuật Two Pointers để đạt độ phức tạp O(N).',
+        codes: {
+            java: `import java.util.*;\n\npublic class Solution {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        // Viết code giải thuật tại đây\n        System.out.println("Accepted");\n    }\n}`,
+            cpp: `#include <iostream>\n#include <vector>\nusing namespace std;\n\nint main() {\n    // Viet code giai thuat tai day\n    cout << "Accepted\\n";\n    return 0;\n}`,
+            python: `import sys\n\ndef main():\n    # Viet code giai thuat tai day\n    print("Accepted")\n\nif __name__ == '__main__':\n    main()`,
+        },
+        url: `https://leetcode.com/problems/${slug}/`,
+    };
+
+    const currentProb = problemsDatabase[slug] || hauiProblemData || defaultLeetProb;
     const [code, setCode] = useState(currentProb?.codes?.[language] || currentProb?.codes?.java || '');
 
     useEffect(() => {
         if (currentProb && currentProb.codes && currentProb.codes[language]) {
             setCode(currentProb.codes[language]);
         }
-    }, [slug, language]);
+        if (currentProb?.ex1?.input) {
+            setCustomInput(currentProb.ex1.input);
+        }
+    }, [slug, language, hauiProblemData, apiProblemData]);
 
     const comments = [
         {
@@ -303,52 +410,136 @@ export default function ThiDauDetailPage() {
                             <FontAwesomeIcon icon={faComment} style={{ margin: '0 0.5rem 1px 0px' }} />
                             Thảo luận ({comments.length})
                         </button>
+
+                        {/* Nút chuyển đổi Tiếng Việt 🇻🇳 / English 🇬🇧 */}
+                        {currentProb.content && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: 'auto', paddingRight: '8px' }}>
+                                <button
+                                    onClick={() => setViewLang('vi')}
+                                    style={{
+                                        padding: '3px 8px',
+                                        fontSize: '0.75rem',
+                                        borderRadius: '4px',
+                                        border: viewLang === 'vi' ? '1px solid var(--color-primary)' : '1px solid transparent',
+                                        background: viewLang === 'vi' ? 'rgba(249, 115, 22, 0.18)' : 'transparent',
+                                        color: viewLang === 'vi' ? 'var(--color-primary)' : 'var(--text-dim)',
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                    }}
+                                    title="Hiển thị đề bài bằng Tiếng Việt"
+                                >
+                                    🇻🇳 Tiếng Việt
+                                </button>
+                                <button
+                                    onClick={() => setViewLang('en')}
+                                    style={{
+                                        padding: '3px 8px',
+                                        fontSize: '0.75rem',
+                                        borderRadius: '4px',
+                                        border: viewLang === 'en' ? '1px solid var(--color-primary)' : '1px solid transparent',
+                                        background: viewLang === 'en' ? 'rgba(249, 115, 22, 0.18)' : 'transparent',
+                                        color: viewLang === 'en' ? 'var(--color-primary)' : 'var(--text-dim)',
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                    }}
+                                    title="Hiển thị đề bài gốc Tiếng Anh"
+                                >
+                                    🇬🇧 English
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     <div className={cx('contentScroll')}>
                         {activeTab === 'statement' && (
                             <div className={cx('statementBox')}>
-                                <h2 className={cx('sectionTitle')}>Mô tả bài toán</h2>
-                                <p className={cx('paragraph')}>{currentProb.statement}</p>
-
-                                <h3 className={cx('subSectionTitle')}>Đầu vào (Input)</h3>
-                                <pre className={cx('specBox')}>{currentProb.inputSpec}</pre>
-
-                                <h3 className={cx('subSectionTitle')}>Đầu ra (Output)</h3>
-                                <p className={cx('paragraph')}>{currentProb.outputSpec}</p>
-
-                                <h3 className={cx('subSectionTitle')}>Ví dụ 1</h3>
-                                <div className={cx('exampleCard')}>
-                                    <div className={cx('exampleRow')}>
-                                        <span className={cx('exampleLabel')}>Input:</span>
-                                        <pre className={cx('codeSnippet')}>{currentProb.ex1.input}</pre>
+                                {loadingApiDetail ? (
+                                    <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                        <div style={{ fontSize: '1.1rem', marginBottom: '0.5rem', fontWeight: 600 }}>
+                                            Đang tải chi tiết bài toán...
+                                        </div>
+                                        <span style={{ fontSize: '0.85rem', color: 'var(--text-dim)' }}>
+                                            Đang đồng bộ từ LeetCode API
+                                        </span>
                                     </div>
-                                    <div className={cx('exampleRow')}>
-                                        <span className={cx('exampleLabel')}>Output:</span>
-                                        <pre className={cx('codeSnippet')}>{currentProb.ex1.output}</pre>
-                                    </div>
-                                    <div className={cx('exampleNote')}>
-                                        <strong>Giải thích:</strong> {currentProb.ex1.note}
-                                    </div>
-                                </div>
+                                ) : currentProb.content ? (
+                                    <div style={{ lineHeight: 1.7, color: 'var(--text-main)' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                                            <h2 className={cx('sectionTitle')} style={{ margin: 0 }}>
+                                                {currentProb.title}
+                                            </h2>
+                                            {isTranslating && viewLang === 'vi' && (
+                                                <span style={{ fontSize: '0.75rem', color: 'var(--color-primary)', fontStyle: 'italic' }}>
+                                                    ⚡ Đang dịch sang Tiếng Việt...
+                                                </span>
+                                            )}
+                                        </div>
 
-                                <h3 className={cx('subSectionTitle')}>Ràng buộc & Giới hạn</h3>
-                                <div className={cx('constraintsBox')}>
-                                    <div>
-                                        <FontAwesomeIcon
-                                            icon={faClock}
-                                            style={{ marginRight: '0.5rem', fontSize: '1rem', color: '#007bff' }}
+                                        <div
+                                            dangerouslySetInnerHTML={{
+                                                __html: viewLang === 'vi' && translatedContent ? translatedContent : currentProb.content,
+                                            }}
+                                            style={{ fontSize: '0.95rem' }}
                                         />
-                                        Giới hạn thời gian: <strong>{currentProb.timeLimit}</strong>
+
+                                        {currentProb.url && (
+                                            <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+                                                <a
+                                                    href={currentProb.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    style={{ color: 'var(--color-primary)', fontSize: '0.85rem', textDecoration: 'none', fontWeight: 600 }}
+                                                >
+                                                    🔗 Xem bài gốc trên LeetCode ↗
+                                                </a>
+                                            </div>
+                                        )}
                                     </div>
+                                ) : (
                                     <div>
-                                        <FontAwesomeIcon
-                                            icon={faFloppyDisk}
-                                            style={{ marginRight: '0.5rem', fontSize: '1rem', color: '#f44343' }}
-                                        />
-                                        Giới hạn bộ nhớ: <strong>{currentProb.memLimit}</strong>
+                                        <h2 className={cx('sectionTitle')}>Mô tả bài toán</h2>
+                                        <p className={cx('paragraph')}>{currentProb.statement}</p>
+
+                                        <h3 className={cx('subSectionTitle')}>Đầu vào (Input)</h3>
+                                        <pre className={cx('specBox')}>{currentProb.inputSpec}</pre>
+
+                                        <h3 className={cx('subSectionTitle')}>Đầu ra (Output)</h3>
+                                        <p className={cx('paragraph')}>{currentProb.outputSpec}</p>
+
+                                        <h3 className={cx('subSectionTitle')}>Ví dụ 1</h3>
+                                        <div className={cx('exampleCard')}>
+                                            <div className={cx('exampleRow')}>
+                                                <span className={cx('exampleLabel')}>Input:</span>
+                                                <pre className={cx('codeSnippet')}>{currentProb.ex1.input}</pre>
+                                            </div>
+                                            <div className={cx('exampleRow')}>
+                                                <span className={cx('exampleLabel')}>Output:</span>
+                                                <pre className={cx('codeSnippet')}>{currentProb.ex1.output}</pre>
+                                            </div>
+                                            <div className={cx('exampleNote')}>
+                                                <strong>Giải thích:</strong> {currentProb.ex1.note}
+                                            </div>
+                                        </div>
+
+                                        <h3 className={cx('subSectionTitle')}>Ràng buộc & Giới hạn</h3>
+                                        <div className={cx('constraintsBox')}>
+                                            <div>
+                                                <FontAwesomeIcon
+                                                    icon={faClock}
+                                                    style={{ marginRight: '0.5rem', fontSize: '1rem', color: '#007bff' }}
+                                                />
+                                                Giới hạn thời gian: <strong>{currentProb.timeLimit}</strong>
+                                            </div>
+                                            <div>
+                                                <FontAwesomeIcon
+                                                    icon={faFloppyDisk}
+                                                    style={{ marginRight: '0.5rem', fontSize: '1rem', color: '#f44343' }}
+                                                />
+                                                Giới hạn bộ nhớ: <strong>{currentProb.memLimit}</strong>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                             </div>
                         )}
 

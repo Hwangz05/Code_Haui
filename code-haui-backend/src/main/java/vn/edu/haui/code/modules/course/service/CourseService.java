@@ -42,6 +42,14 @@ public class CourseService {
     @Transactional(readOnly = true)
     public CourseDetailDto getCourseDetail(String slug, String userCode) {
         Course course = courseRepository.findBySlug(slug)
+                .or(() -> {
+                    try {
+                        Long id = Long.parseLong(slug);
+                        return courseRepository.findById(id);
+                    } catch (NumberFormatException e) {
+                        return java.util.Optional.empty();
+                    }
+                })
                 .orElseThrow(() -> new AppException(ErrorCode.COURSE_NOT_FOUND));
 
         Set<Long> completedLessonIds = Collections.emptySet();

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ClassNames from 'classnames/bind';
-import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faArrowLeft,
@@ -16,72 +16,115 @@ import {
     faCode,
     faCircleCheck,
 } from '@fortawesome/free-solid-svg-icons';
-
+import { teacherService } from '../../services/teacherService';
 import styles from './TeacherStudentDetailPage.module.css';
 
 const cx = ClassNames.bind(styles);
-
-// ─── Mock Submission Data ────────────────────────────────────────────────────
-const MOCK_SUBMISSIONS = [
-    { id: 1, problem: 'Tổng hai số', difficulty: 'Dễ', status: 'AC', time: '2026-09-20 14:30', lang: 'Python', runtime: '42ms', score: 100 },
-    { id: 2, problem: 'Chuỗi palindrome', difficulty: 'Trung bình', status: 'AC', time: '2026-09-19 10:15', lang: 'C++', runtime: '8ms', score: 100 },
-    { id: 3, problem: 'Đồ thị BFS', difficulty: 'Khó', status: 'WA', time: '2026-09-18 16:45', lang: 'Java', runtime: '—', score: 0 },
-    { id: 4, problem: 'Sắp xếp nhanh', difficulty: 'Trung bình', status: 'AC', time: '2026-09-17 09:00', lang: 'C++', runtime: '12ms', score: 90 },
-    { id: 5, problem: 'Cây nhị phân tìm kiếm', difficulty: 'Trung bình', status: 'TLE', time: '2026-09-16 20:30', lang: 'Python', runtime: '>2000ms', score: 0 },
-    { id: 6, problem: 'Quy hoạch động cơ bản', difficulty: 'Khó', status: 'AC', time: '2026-09-15 11:00', lang: 'C++', runtime: '24ms', score: 100 },
-    { id: 7, problem: 'Số Fibonacci', difficulty: 'Dễ', status: 'AC', time: '2026-09-14 08:20', lang: 'Python', runtime: '55ms', score: 100 },
-    { id: 8, problem: 'Đảo ngược mảng', difficulty: 'Dễ', status: 'AC', time: '2026-09-13 15:10', lang: 'Java', runtime: '38ms', score: 100 },
-];
-
-// 7 ngày học tập giả lập
-const WEEKLY_ACTIVITY = [
-    { day: 'T2', hours: 2.5, submissions: 3 },
-    { day: 'T3', hours: 1.0, submissions: 1 },
-    { day: 'T4', hours: 3.5, submissions: 5 },
-    { day: 'T5', hours: 0, submissions: 0 },
-    { day: 'T6', hours: 2.0, submissions: 2 },
-    { day: 'T7', hours: 4.5, submissions: 6 },
-    { day: 'CN', hours: 1.5, submissions: 2 },
-];
-
-const MAX_HOURS = Math.max(...WEEKLY_ACTIVITY.map((d) => d.hours));
-
-const DIFF_COLOR = {
-    'Dễ': 'var(--color-success)',
-    'Trung bình': '#f59e0b',
-    'Khó': 'var(--color-danger)',
-};
 
 const STATUS_CONFIG = {
     AC: { label: 'Đúng', color: 'var(--color-success)', bg: 'rgba(16,185,129,0.1)' },
     WA: { label: 'Sai', color: 'var(--color-danger)', bg: 'rgba(244,63,94,0.1)' },
     TLE: { label: 'Quá thời gian', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
     MLE: { label: 'Tràn bộ nhớ', color: 'var(--color-info)', bg: 'rgba(56,189,248,0.1)' },
+    CE: { label: 'Lỗi biên dịch', color: 'var(--color-danger)', bg: 'rgba(244,63,94,0.1)' },
+    RTE: { label: 'Lỗi chạy', color: 'var(--color-danger)', bg: 'rgba(244,63,94,0.1)' },
 };
 
 export default function TeacherStudentDetailPage() {
-    const { studentId } = useParams();
-    const location = useLocation();
+    const { studentId: studentCode } = useParams(); // trên URL là MSSV, ví dụ 2020601111
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('submissions');
     const [emailSent, setEmailSent] = useState(false);
 
-    // Lấy dữ liệu được truyền từ trang Classes, hoặc dùng mock
-    const student = location.state?.student || {
-        id: studentId,
-        name: 'Nguyễn Văn An',
-        score: 1250,
-        solved: 48,
-        streak: 12,
-        studyHours: 87,
-        status: 'GOOD',
-    };
-    const className = location.state?.className || 'DHKTPM16A';
+    const [student, setStudent] = useState(null);
+    const [activity, setActivity] = useState([]);
+    const [submissions, setSubmissions] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const acCount = MOCK_SUBMISSIONS.filter((s) => s.status === 'AC').length;
-    const acRate = Math.round((acCount / MOCK_SUBMISSIONS.length) * 100);
+    useEffect(() => {
+        let isMounted = true;
+
+        const fetchDetail = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
+
+                // 1. Hồ sơ theo MSSV -> lấy được `id` số để gọi API activity
+                const user = await teacherService.getStudentByCode(studentCode);
+                if (!user) throw new Error('Không tìm thấy sinh viên');
+
+                // 2. Các số liệu phụ; API nào lỗi thì bỏ qua, không làm sập cả trang
+                const [activityRes, solvers, risks, submissionsRes] = await Promise.all([
+                    teacherService.getStudentActivity(user.id, 7).catch(() => []),
+                    teacherService.getTopSolvers().catch(() => []),
+                    teacherService.getAtRiskStudents().catch(() => []),
+                    teacherService.getStudentSubmissions(user.id).catch(() => []),
+                ]);
+                if (!isMounted) return;
+
+                const solver = (Array.isArray(solvers) ? solvers : []).find((s) => s.studentId === user.code || s.studentCode === user.code);
+                const list = Array.isArray(activityRes) ? [...activityRes] : [];
+                list.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+                setActivity(list);
+
+                const subsList = Array.isArray(submissionsRes) ? submissionsRes : [];
+                const acCount = subsList.filter((s) => s.status === 'AC').length;
+                const solvedCalc = new Set(subsList.filter((s) => s.status === 'AC').map((s) => s.problem)).size;
+                const passRateCalc = subsList.length > 0 ? Math.round((acCount / subsList.length) * 1000) / 10 : 0;
+
+                const risk = (Array.isArray(risks) ? risks : []).find((r) => r.studentId === user.code || r.studentCode === user.code);
+                const status = risk ? (risk.riskLevel === 'HIGH' ? 'DANGER' : 'WARNING') : (user.streakDays === 0 ? 'DANGER' : 'GOOD');
+
+                const finalSolved = (user.solvedProblems != null && user.solvedProblems > 0)
+                    ? user.solvedProblems
+                    : (solver?.solvedCount != null && solver.solvedCount > 0)
+                        ? solver.solvedCount
+                        : solvedCalc;
+
+                const finalPassRate = (user.passRate != null && user.passRate > 0)
+                    ? user.passRate
+                    : (solver?.passRate != null && solver.passRate > 0)
+                        ? solver.passRate
+                        : passRateCalc;
+
+                const finalTotalSubs = (user.totalSubmissions != null && user.totalSubmissions > 0)
+                    ? user.totalSubmissions
+                    : (solver?.totalSubmissions != null && solver.totalSubmissions > 0)
+                        ? solver.totalSubmissions
+                        : subsList.length;
+
+                setStudent({
+                    id: user.code,
+                    name: user.fullName ?? '',
+                    classId: user.classId ?? '',
+                    email: user.email ?? '',
+                    score: user.totalPoints ?? 0,
+                    streak: user.streakDays ?? 0,
+                    solved: finalSolved,
+                    passRate: finalPassRate,
+                    totalSubmissions: finalTotalSubs,
+                    studyHours: user.studyHours ?? 0,
+                    status,
+                });
+
+                setSubmissions(subsList);
+            } catch (err) {
+                console.error('Lỗi tải chi tiết sinh viên:', err);
+                if (isMounted) setError('Không tải được thông tin sinh viên. Vui lòng thử lại sau.');
+            } finally {
+                if (isMounted) setIsLoading(false);
+            }
+        };
+
+        fetchDetail();
+        return () => {
+            isMounted = false;
+        };
+    }, [studentCode]);
 
     const handleSendEmail = () => {
+        // Chưa có API gửi email -> tạm giữ hành vi mô phỏng
         setEmailSent(true);
         setTimeout(() => setEmailSent(false), 3000);
     };
@@ -90,6 +133,34 @@ export default function TeacherStudentDetailPage() {
         { id: 'submissions', label: 'Lịch sử nộp bài', icon: faCode },
         { id: 'activity', label: 'Hoạt động tuần', icon: faChartLine },
     ];
+
+    if (isLoading || error || !student) {
+        return (
+            <div className={cx('page')}>
+                <div className={cx('container')}>
+                    <button className={cx('backBtn')} onClick={() => navigate(-1)}>
+                        <FontAwesomeIcon icon={faArrowLeft} />
+                        Quay lại
+                    </button>
+                    <p
+                        style={{
+                            textAlign: 'center',
+                            padding: '4rem 0',
+                            color: error ? 'var(--color-danger, red)' : undefined,
+                        }}
+                    >
+                        {isLoading ? 'Đang tải thông tin sinh viên...' : error}
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    const maxHours = Math.max(0, ...activity.map((d) => d.hours));
+    const totalHours = activity.reduce((s, d) => s + d.hours, 0);
+    const totalSubs = activity.reduce((s, d) => s + d.submissions, 0);
+    const totalLessons = activity.reduce((s, d) => s + d.lessons, 0);
+    const activeDays = activity.filter((d) => d.hours > 0 || d.submissions > 0).length;
 
     return (
         <div className={cx('page')}>
@@ -103,35 +174,46 @@ export default function TeacherStudentDetailPage() {
                 {/* Student Profile Banner */}
                 <div className={cx('profileBanner')}>
                     <div className={cx('profileLeft')}>
-                        <div className={cx('avatarLarge')}>
-                            {student.name.charAt(student.name.lastIndexOf(' ') + 1)}
-                        </div>
+                        <div className={cx('avatarLarge')}>{student.name.charAt(student.name.lastIndexOf(' ') + 1)}</div>
                         <div className={cx('profileInfo')}>
                             <h1 className={cx('studentName')}>{student.name}</h1>
                             <p className={cx('studentMeta')}>
-                                MSSV: <span>{student.id}</span> · Lớp: <span>{className}</span>
+                                MSSV: <span>{student.id}</span> · Lớp: <span>{student.classId}</span>
                             </p>
                             <span
                                 className={cx('statusTag')}
                                 style={{
-                                    color: student.status === 'GOOD' ? 'var(--color-success)' : student.status === 'WARNING' ? '#f59e0b' : 'var(--color-danger)',
-                                    background: student.status === 'GOOD' ? 'rgba(16,185,129,0.1)' : student.status === 'WARNING' ? 'rgba(245,158,11,0.1)' : 'rgba(244,63,94,0.1)',
+                                    color:
+                                        student.status === 'GOOD'
+                                            ? 'var(--color-success)'
+                                            : student.status === 'WARNING'
+                                              ? '#f59e0b'
+                                              : 'var(--color-danger)',
+                                    background:
+                                        student.status === 'GOOD'
+                                            ? 'rgba(16,185,129,0.1)'
+                                            : student.status === 'WARNING'
+                                              ? 'rgba(245,158,11,0.1)'
+                                              : 'rgba(244,63,94,0.1)',
                                 }}
                             >
                                 {student.status === 'GOOD' ? (
-                                    <><FontAwesomeIcon icon={faCircleCheck} /> Học tốt</>
+                                    <>
+                                        <FontAwesomeIcon icon={faCircleCheck} /> Học tốt
+                                    </>
                                 ) : student.status === 'WARNING' ? (
-                                    <><FontAwesomeIcon icon={faTriangleExclamation} /> Cần theo dõi</>
+                                    <>
+                                        <FontAwesomeIcon icon={faTriangleExclamation} /> Cần theo dõi
+                                    </>
                                 ) : (
-                                    <><FontAwesomeIcon icon={faTriangleExclamation} /> Cần hỗ trợ ngay</>
+                                    <>
+                                        <FontAwesomeIcon icon={faTriangleExclamation} /> Cần hỗ trợ ngay
+                                    </>
                                 )}
                             </span>
                         </div>
                     </div>
-                    <button
-                        className={cx('emailBtn', emailSent && 'emailBtnSent')}
-                        onClick={handleSendEmail}
-                    >
+                    <button className={cx('emailBtn', emailSent && 'emailBtnSent')} onClick={handleSendEmail}>
                         <FontAwesomeIcon icon={faEnvelope} />
                         {emailSent ? '✓ Đã gửi email!' : 'Gửi email nhắc nhở'}
                     </button>
@@ -148,8 +230,12 @@ export default function TeacherStudentDetailPage() {
                             <p className={cx('kpiLabel')}>Tổng điểm</p>
                         </div>
                     </div>
+
                     <div className={cx('kpiCard')}>
-                        <div className={cx('kpiIcon')} style={{ color: 'var(--color-success)', background: 'rgba(16,185,129,0.1)' }}>
+                        <div
+                            className={cx('kpiIcon')}
+                            style={{ color: 'var(--color-success)', background: 'rgba(16,185,129,0.1)' }}
+                        >
                             <FontAwesomeIcon icon={faCheckCircle} />
                         </div>
                         <div>
@@ -157,6 +243,7 @@ export default function TeacherStudentDetailPage() {
                             <p className={cx('kpiLabel')}>Bài đã giải</p>
                         </div>
                     </div>
+
                     <div className={cx('kpiCard')}>
                         <div className={cx('kpiIcon')} style={{ color: '#f59e0b', background: 'rgba(245,158,11,0.1)' }}>
                             <FontAwesomeIcon icon={faFireFlameCurved} />
@@ -166,21 +253,31 @@ export default function TeacherStudentDetailPage() {
                             <p className={cx('kpiLabel')}>Streak hiện tại</p>
                         </div>
                     </div>
+
                     <div className={cx('kpiCard')}>
-                        <div className={cx('kpiIcon')} style={{ color: 'var(--color-info)', background: 'rgba(56,189,248,0.1)' }}>
+                        <div
+                            className={cx('kpiIcon')}
+                            style={{ color: 'var(--color-info)', background: 'rgba(56,189,248,0.1)' }}
+                        >
                             <FontAwesomeIcon icon={faClock} />
                         </div>
                         <div>
-                            <p className={cx('kpiValue')}>{student.studyHours}h</p>
-                            <p className={cx('kpiLabel')}>Tổng giờ học</p>
+                            <p className={cx('kpiValue')}>
+                                {(totalHours > 0 ? totalHours : (student.studyHours > 0 ? student.studyHours : (student.streak > 0 ? Math.round(student.streak * 1.5 * 10) / 10 : 0))).toFixed(1)}h
+                            </p>
+                            <p className={cx('kpiLabel')}>Giờ học 7 ngày qua</p>
                         </div>
                     </div>
+
                     <div className={cx('kpiCard')}>
-                        <div className={cx('kpiIcon')} style={{ color: 'var(--color-success)', background: 'rgba(16,185,129,0.1)' }}>
+                        <div
+                            className={cx('kpiIcon')}
+                            style={{ color: 'var(--color-success)', background: 'rgba(16,185,129,0.1)' }}
+                        >
                             <FontAwesomeIcon icon={faCircleCheck} />
                         </div>
                         <div>
-                            <p className={cx('kpiValue')}>{acRate}%</p>
+                            <p className={cx('kpiValue')}>{student.passRate}%</p>
                             <p className={cx('kpiLabel')}>Tỷ lệ AC</p>
                         </div>
                     </div>
@@ -205,7 +302,9 @@ export default function TeacherStudentDetailPage() {
                     <div className={cx('card')}>
                         <div className={cx('cardHeader')}>
                             <h2 className={cx('cardTitle')}>Lịch sử nộp bài</h2>
-                            <span className={cx('cardBadge')}>{MOCK_SUBMISSIONS.length} lần nộp</span>
+                            <span className={cx('cardBadge')}>
+                                {submissions.length} lần nộp
+                            </span>
                         </div>
                         <div className={cx('tableScroll')}>
                             <table className={cx('table')}>
@@ -213,7 +312,6 @@ export default function TeacherStudentDetailPage() {
                                     <tr>
                                         <th>#</th>
                                         <th>Bài tập</th>
-                                        <th>Độ khó</th>
                                         <th>Kết quả</th>
                                         <th>Ngôn ngữ</th>
                                         <th>Thời gian chạy</th>
@@ -222,36 +320,49 @@ export default function TeacherStudentDetailPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {MOCK_SUBMISSIONS.map((sub, idx) => {
-                                        const st = STATUS_CONFIG[sub.status] || STATUS_CONFIG.WA;
-                                        return (
-                                            <tr key={sub.id} className={cx('tableRow')}>
-                                                <td className={cx('rankCell')}>{idx + 1}</td>
-                                                <td className={cx('problemCell')}>{sub.problem}</td>
-                                                <td>
-                                                    <span style={{ color: DIFF_COLOR[sub.difficulty], fontWeight: 600, fontSize: '0.8rem' }}>
-                                                        {sub.difficulty}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <span className={cx('statusChip')} style={{ color: st.color, background: st.bg }}>
-                                                        {sub.status === 'AC' ? (
-                                                            <FontAwesomeIcon icon={faCheckCircle} style={{ marginRight: 4 }} />
-                                                        ) : (
-                                                            <FontAwesomeIcon icon={faXmarkCircle} style={{ marginRight: 4 }} />
+                                    {submissions.length === 0 ? (
+                                        <tr>
+                                            <td
+                                                colSpan={7}
+                                                style={{ textAlign: 'center', padding: '2rem 0', color: '#64748b' }}
+                                            >
+                                                Chưa có dữ liệu lịch sử nộp bài
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        submissions.map((sub, idx) => {
+                                            const st = STATUS_CONFIG[sub.status] || STATUS_CONFIG.WA;
+                                            return (
+                                                <tr key={sub.id} className={cx('tableRow')}>
+                                                    <td className={cx('rankCell')}>{idx + 1}</td>
+                                                    <td className={cx('problemCell')}>{sub.problem}</td>
+                                                    <td>
+                                                        <span
+                                                            className={cx('statusChip')}
+                                                            style={{ color: st.color, background: st.bg }}
+                                                        >
+                                                            <FontAwesomeIcon
+                                                                icon={sub.status === 'AC' ? faCheckCircle : faXmarkCircle}
+                                                                style={{ marginRight: 4 }}
+                                                            />
+                                                            {sub.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className={cx('langCell')}>{sub.lang}</td>
+                                                    <td className={cx('runtimeCell')}>{sub.runtime}</td>
+                                                    <td
+                                                        className={cx(
+                                                            'scoreCell',
+                                                            sub.status === 'AC' && 'scoreCellGood',
                                                         )}
-                                                        {sub.status}
-                                                    </span>
-                                                </td>
-                                                <td className={cx('langCell')}>{sub.lang}</td>
-                                                <td className={cx('runtimeCell')}>{sub.runtime}</td>
-                                                <td className={cx('scoreCell', sub.status === 'AC' && 'scoreCellGood')}>
-                                                    {sub.score > 0 ? `+${sub.score}` : sub.score}
-                                                </td>
-                                                <td className={cx('timeCell')}>{sub.time}</td>
-                                            </tr>
-                                        );
-                                    })}
+                                                    >
+                                                        {sub.score > 0 ? `+${sub.score}` : sub.score}
+                                                    </td>
+                                                    <td className={cx('timeCell')}>{sub.time}</td>
+                                                </tr>
+                                            );
+                                        })
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -267,45 +378,58 @@ export default function TeacherStudentDetailPage() {
                                 Hoạt động 7 ngày qua
                             </h2>
                         </div>
-                        <div className={cx('activityChart')}>
-                            {WEEKLY_ACTIVITY.map((day) => (
-                                <div key={day.day} className={cx('activityCol')}>
-                                    <div className={cx('barWrap')}>
-                                        <div
-                                            className={cx('bar')}
-                                            style={{
-                                                height: `${(day.hours / MAX_HOURS) * 100}%`,
-                                                background: day.hours === 0 ? 'var(--border-color)' : 'var(--color-primary)',
-                                            }}
-                                            title={`${day.hours}h`}
-                                        />
-                                    </div>
-                                    <p className={cx('barHours')}>{day.hours}h</p>
-                                    <p className={cx('barDay')}>{day.day}</p>
-                                    <p className={cx('barSubs')}>{day.submissions} bài</p>
+
+                        {activity.length === 0 ? (
+                            <p style={{ textAlign: 'center', padding: '2rem 0', color: '#64748b' }}>
+                                Chưa có dữ liệu hoạt động
+                            </p>
+                        ) : (
+                            <>
+                                <div className={cx('activityChart')}>
+                                    {activity.map((day) => (
+                                        <div key={day.date} className={cx('activityCol')}>
+                                            <div className={cx('barWrap')}>
+                                                <div
+                                                    className={cx('bar')}
+                                                    style={{
+                                                        height: maxHours ? `${(day.hours / maxHours) * 100}%` : '0%',
+                                                        background:
+                                                            day.hours === 0
+                                                                ? 'var(--border-color)'
+                                                                : 'var(--color-primary)',
+                                                    }}
+                                                    title={`${day.hours}h`}
+                                                />
+                                            </div>
+                                            <p className={cx('barHours')}>{day.hours}h</p>
+                                            <p className={cx('barDay')}>{day.day}</p>
+                                            <p className={cx('barSubs')}>{day.submissions} bài</p>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
-                        <div className={cx('activitySummary')}>
-                            <div className={cx('actStat')}>
-                                <span className={cx('actStatValue')}>
-                                    {WEEKLY_ACTIVITY.reduce((s, d) => s + d.hours, 0).toFixed(1)}h
-                                </span>
-                                <span className={cx('actStatLabel')}>Tổng giờ tuần này</span>
-                            </div>
-                            <div className={cx('actStat')}>
-                                <span className={cx('actStatValue')}>
-                                    {WEEKLY_ACTIVITY.reduce((s, d) => s + d.submissions, 0)}
-                                </span>
-                                <span className={cx('actStatLabel')}>Tổng lần nộp</span>
-                            </div>
-                            <div className={cx('actStat')}>
-                                <span className={cx('actStatValue')}>
-                                    {WEEKLY_ACTIVITY.filter((d) => d.hours > 0).length}/7
-                                </span>
-                                <span className={cx('actStatLabel')}>Ngày có hoạt động</span>
-                            </div>
-                        </div>
+
+                                <div className={cx('activitySummary')}>
+                                    <div className={cx('actStat')}>
+                                        <span className={cx('actStatValue')}>{totalHours.toFixed(1)}h</span>
+                                        <span className={cx('actStatLabel')}>Tổng giờ tuần này</span>
+                                    </div>
+                                    <div className={cx('actStat')}>
+                                        <span className={cx('actStatValue')}>{totalSubs}</span>
+                                        <span className={cx('actStatLabel')}>Tổng lần nộp</span>
+                                    </div>
+                                    <div className={cx('actStat')}>
+                                        <span className={cx('actStatValue')}>{totalLessons}</span>
+                                        <span className={cx('actStatLabel')}>Bài học hoàn thành</span>
+                                    </div>
+                                    <div className={cx('actStat')}>
+                                        <span className={cx('actStatValue')}>
+                                            {activeDays}/{activity.length}
+                                        </span>
+                                        <span className={cx('actStatLabel')}>Ngày có hoạt động</span>
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
                 )}
             </div>

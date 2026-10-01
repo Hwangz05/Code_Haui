@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import ClassNames from 'classnames/bind';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -23,6 +23,7 @@ import {
 import { faCircleDot, faLightbulb } from '@fortawesome/free-regular-svg-icons';
 
 import { ROUTES } from '../../config/routes.config';
+import { courseService } from '../../services/courseService';
 import Badge from '../../components/common/Badge/Badge';
 import Button from '../../components/common/Button/Button';
 import styles from './KhoaHocDetailPage.module.css';
@@ -34,10 +35,14 @@ export default function KhoaHocDetailPage() {
     const navigate = useNavigate();
 
     const [activeTab, setActiveTab] = useState('theory'); // 'theory' | 'practice' | 'quiz' | 'discussion'
-    const [selectedLessonId, setSelectedLessonId] = useState(203);
+    const [selectedLessonId, setSelectedLessonId] = useState(null);
     const [sidebarOpen, setSidebarOpen] = useState(true);
-    const [expandedChapters, setExpandedChapters] = useState([1, 2]);
-    const [completedLessons, setCompletedLessons] = useState([101, 102, 103, 201, 202]);
+    const [expandedChapters, setExpandedChapters] = useState([]);
+    const [completedLessons, setCompletedLessons] = useState([]);
+    const [courseData, setCourseData] = useState(null);
+    const [loadingCourse, setLoadingCourse] = useState(true);
+    const [lessonDetail, setLessonDetail] = useState(null);
+    const [loadingLesson, setLoadingLesson] = useState(false);
     const [quizAnswers, setQuizAnswers] = useState({});
     const [quizSubmitted, setQuizSubmitted] = useState(false);
     const [practiceCode, setPracticeCode] = useState(`// Bài tập: Hoàn thiện class Dog và Cat kế thừa từ Animal
@@ -72,8 +77,8 @@ public class Main {
     const [practiceOutput, setPracticeOutput] = useState(null);
     const [isExecuting, setIsExecuting] = useState(false);
 
-    // Course Data Mock
-    const course = {
+    // Fallback Course Data nếu chưa bật backend
+    const defaultCourse = {
         id: id || 1,
         title: 'Lập trình Java Căn bản & OOP',
         category: 'Java Core',
@@ -192,6 +197,101 @@ public class Main {
         ],
     };
 
+    // 1. Tải dữ liệu Khóa học thật từ Backend API
+    useEffect(() => {
+        let isMounted = true;
+        const fetchCourse = async () => {
+            try {
+                setLoadingCourse(true);
+                const courseIdOrSlug = id || '1';
+                const data = await courseService.getCourseDetail(courseIdOrSlug);
+
+                if (isMounted && data) {
+                    const formatted = {
+                        id: data.id,
+                        title: data.title,
+                        slug: data.slug,
+                        category: data.level === 'BASIC' ? 'Cơ bản' : data.level === 'INTERMEDIATE' ? 'Trung cấp' : 'Nâng cao',
+                        instructor: data.instructorName || 'Khoa CNTT - HaUI',
+                        totalLessons: data.totalLessons || 0,
+                        chapters: (data.sections || []).map((sec, sIdx) => ({
+                            id: sec.id || sIdx + 1,
+                            title: sec.title,
+                            lessons: (sec.lessons || []).map((les) => ({
+                                id: les.id,
+                                title: les.title,
+                                type: les.type ? les.type.toLowerCase() : 'theory',
+                                duration: les.durationMinutes ? `${les.durationMinutes} phút` : '15 phút',
+                                completed: les.isCompleted,
+                            })),
+                        })),
+                    };
+
+                    setCourseData(formatted);
+
+                    // Mở tất cả chương
+                    if (formatted.chapters.length > 0) {
+                        setExpandedChapters(formatted.chapters.map((ch) => ch.id));
+                        const allLes = formatted.chapters.flatMap((c) => c.lessons);
+                        const firstLes = allLes.find((l) => !l.completed) || allLes[0];
+                        if (firstLes) setSelectedLessonId(firstLes.id);
+
+                        const compIds = allLes.filter((l) => l.completed).map((l) => l.id);
+                        setCompletedLessons(compIds);
+                    }
+                } else if (isMounted) {
+                    setCourseData(defaultCourse);
+                    setSelectedLessonId(203);
+                    setCompletedLessons([101, 102, 103, 201, 202]);
+                    setExpandedChapters([1, 2]);
+                }
+            } catch (err) {
+                console.warn('Lỗi khi tải khóa học từ Backend, dùng dữ liệu mẫu:', err);
+                if (isMounted) {
+                    setCourseData(defaultCourse);
+                    setSelectedLessonId(203);
+                    setCompletedLessons([101, 102, 103, 201, 202]);
+                    setExpandedChapters([1, 2]);
+                }
+            } finally {
+                if (isMounted) setLoadingCourse(false);
+            }
+        };
+
+        fetchCourse();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [id]);
+
+    // 2. Tải nội dung chi tiết của bài học đang chọn
+    useEffect(() => {
+        let isMounted = true;
+        if (selectedLessonId && typeof selectedLessonId === 'number' && selectedLessonId > 0 && selectedLessonId < 100) {
+            setLoadingLesson(true);
+            courseService
+                .getLessonDetail(selectedLessonId)
+                .then((data) => {
+                    if (isMounted && data) {
+                        setLessonDetail(data);
+                        if (data.initialCode) {
+                            setPracticeCode(data.initialCode);
+                        }
+                    }
+                })
+                .catch((err) => console.warn('Lỗi tải bài học:', err))
+                .finally(() => {
+                    if (isMounted) setLoadingLesson(false);
+                });
+        }
+        return () => {
+            isMounted = false;
+        };
+    }, [selectedLessonId]);
+
+    const course = courseData || defaultCourse;
+
     // Flatten lessons for navigation
     const allLessons = course.chapters.flatMap((ch) => ch.lessons);
     const currentIndex = allLessons.findIndex((l) => l.id === selectedLessonId);
@@ -219,9 +319,16 @@ public class Main {
         }
     };
 
-    const toggleCompleteCurrent = () => {
+    const toggleCompleteCurrent = async () => {
         if (!completedLessons.includes(selectedLessonId)) {
-            setCompletedLessons([...completedLessons, selectedLessonId]);
+            setCompletedLessons((prev) => [...prev, selectedLessonId]);
+            if (typeof selectedLessonId === 'number' && selectedLessonId < 100) {
+                try {
+                    await courseService.markLessonCompleted(selectedLessonId);
+                } catch (e) {
+                    console.warn('Lỗi lưu tiến độ bài học lên Backend:', e);
+                }
+            }
         }
         if (nextLesson) {
             handleLessonSelect(nextLesson.id);
@@ -243,7 +350,39 @@ public class Main {
         }, 800);
     };
 
+    // ─── Loading guard: tránh màn hình trống khi đang tải khóa học ───
+    if (loadingCourse && !courseData) {
+        return (
+            <div
+                style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100vh',
+                    background: 'var(--bg-primary, #0f172a)',
+                    color: 'var(--text-muted, #94a3b8)',
+                    gap: '16px',
+                }}
+            >
+                <div
+                    style={{
+                        width: '40px',
+                        height: '40px',
+                        border: '3px solid rgba(249,115,22,0.3)',
+                        borderTop: '3px solid #f97316',
+                        borderRadius: '50%',
+                        animation: 'spin 0.8s linear infinite',
+                    }}
+                />
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                <span style={{ fontSize: '15px' }}>Đang tải khóa học...</span>
+            </div>
+        );
+    }
+
     return (
+
         <div className={cx('learningWrapper')}>
             {/* 1. TOP HEADER BAR */}
             <div className={cx('topBar')}>
